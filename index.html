@@ -23,6 +23,22 @@
   	</style>
   	<script type="text/javascript">
   		window.serverAddr='localhost:8090'
+  		function setCookie(cname,cvalue,exdays){
+		  var d = new Date();
+		  d.setTime(d.getTime()+(exdays*24*60*60*1000));
+		  var expires = "expires="+d.toGMTString();
+		  document.cookie = cname + "=" + cvalue + "; " + expires;
+		}
+		function getCookie(cname){
+		  var name = cname + "=";
+		  var ca = document.cookie.split(';');
+		  for(var i=0; i<ca.length; i++) 
+		  {
+		    var c = ca[i].trim();
+		    if (c.indexOf(name)==0) return c.substring(name.length,c.length);
+		  }
+		  return "";
+		}
   		function login(me) {
   			me.disabled='disabled'
   			document.getElementById('login-progress').style.display = 'block'
@@ -35,16 +51,53 @@
   				ws.send(JSON.stringify(obj))
   			}
   			ws.onmessage=function(evt) {
-  				console.log(evt.data)
+  				var obj=JSON.parse(evt.data)
+  				if (obj.State=="OK") {
+  					setCookie("TheyTubeSessionID",obj.Info,365)
+  					fn.load('home.html')
+  				}else if (obj.State=="ERR") {
+  					ons.notification.alert(obj.Info)
+  				}
+  				ws.close()
   			}
 			ws.onclose=function(evt){
 				console.log('on close')
+				document.getElementById('login-progress').style.display = 'none'
+  				me.disabled=''
         	}
         	ws.onerror=function(evt){
         		console.log(evt.data)
         	}
-  			document.getElementById('login-progress').style.display = 'none'
-  			me.disabled=''
+  		}
+  		function register(me) {
+  			me.disabled='disabled'
+  			document.getElementById('register-progress').style.display = 'block'
+  			var obj=new Object()
+  			obj.Email=document.getElementById("register-email").value
+  			obj.Password=document.getElementById("register-password").value
+  			var ws=new WebSocket("ws://"+window.serverAddr+"/wsRegister")
+  			ws.onopen=function(evt) {
+  				console.log('on open')
+  				ws.send(JSON.stringify(obj))
+  			}
+  			ws.onmessage=function(evt) {
+  				var obj=JSON.parse(evt.data)
+  				if (obj.State=="OK") {
+  					setCookie("TheyTubeSessionID",obj.Info,365)
+  					fn.load('home.html')
+  				}else if (obj.State=="ERR") {
+  					ons.notification.alert(obj.Info)
+  				}
+  				ws.close()
+  			}
+			ws.onclose=function(evt){
+				console.log('on close')
+				document.getElementById('register-progress').style.display = 'none'
+  				me.disabled=''
+        	}
+        	ws.onerror=function(evt){
+        		console.log(evt.data)
+        	}
   		}
   	</script>
 </head>
@@ -88,7 +141,7 @@
         </ons-toolbar-button>
       </div>
       <div class="center">
-          精选
+          首页
       </div>
     </ons-toolbar>
     <div style="display: flex;flex-direction: column;align-items: center;">
@@ -135,7 +188,44 @@
   	</div>
   </ons-page>
 </template>
+<template id="register.html">
+  <ons-page>
+    <ons-toolbar>
+      <div class="right">
+        <ons-toolbar-button onclick="fn.open()">
+          <ons-icon icon="md-menu"></ons-icon>
+        </ons-toolbar-button>
+      </div>
+      <div class="center">
+        注册
+      </div>
+    </ons-toolbar>
+    <p id="register-progress" style="display: none;margin-top: 0px;"><ons-progress-bar class="progressStyle" indeterminate></ons-progress-bar></p>
+    <div style="text-align: center; margin-top: 30px;">
+    <p><ons-input id="register-email" modifier="underbar" placeholder="Email" float></ons-input></p>
+    <p><ons-input id="register-password" modifier="underbar" type="password" placeholder="密码" float></ons-input></p>
+    <p style="margin-top: 30px;"><ons-button onclick="register(this)">注册</ons-button></p>
+  	</div>
+  </ons-page>
+</template>
 
+<template id="settings.html">
+  <ons-page>
+    <ons-toolbar>
+      <div class="right">
+        <ons-toolbar-button onclick="fn.open()">
+          <ons-icon icon="md-menu"></ons-icon>
+        </ons-toolbar-button>
+      </div>
+      <div class="center">
+        设置
+      </div>
+    </ons-toolbar>
+    <div style="text-align: center; margin-top: 30px;">
+    设置
+  	</div>
+  </ons-page>
+</template>
 <script type="text/javascript">
 	window.fn = {};
 
