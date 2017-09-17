@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>TheyTube - Watch free video online</title>
+	<link rel="stylesheet" href="https://unpkg.com/onsenui/css/onsenui.css">
+	<link rel="stylesheet" href="https://unpkg.com/onsenui/css/onsen-css-components.min.css">
+  	<script src="https://unpkg.com/onsenui/js/onsenui.min.js"></script>
+  	<script type="text/javascript">
+  		ons.platform.select('android')
+  	</script>
+  	<style type="text/css">
+  		.coverTitle{
+  			color: #fff;
+  			margin-top: -50px;
+  			position: absolute;
+  			margin-left: 10px;
+  			font-size: 30px;
+  			text-shadow:#000 1px 0 0,#000 0 1px 0,#000 -1px 0 0,#000 0 -1px 0;
+  		}
+  		a{
+  			text-decoration: none;
+  		}
+  	</style>
+  	<script type="text/javascript">
+  		function login(me) {
+  			me.disabled='disabled'
+  			document.getElementById('login-progress').style.display = 'block'
+  			
+  		}
+  	</script>
+</head>
+<body>
+<ons-splitter>
+  <ons-splitter-side id="menu" side="right" width="260px" collapse swipeable>
+    <ons-page>
+      {{if .LoginedIn}}
+      <ons-list-title>{{.Email}}</ons-list-title>
+      <ons-list>
+      	<ons-list-item onclick="fn.load('myPage.html')" tappable>我的主页</ons-list-item>
+      	<ons-list-item onclick="fn.load('settings.html')" tappable>设置</ons-list-item>
+      </ons-list>
+      {{else}}
+      <ons-list-title>关于我</ons-list-title>
+      <ons-list>
+      	<ons-list-item onclick="fn.load('login.html')" tappable>登录</ons-list-item>
+      	<ons-list-item onclick="fn.load('register.html')" tappable>注册</ons-list-item>
+      </ons-list>
+      {{end}}
+      <ons-list-title>快速导航</ons-list-title>
+      <ons-list>
+        <ons-list-item onclick="fn.load('home.html')" tappable>
+          首页
+        </ons-list-item>
+        <ons-list-item onclick="fn.load('new.html')" tappable>
+          新上传
+        </ons-list-item>
+      </ons-list>
+    </ons-page>
+  </ons-splitter-side>
+  <ons-splitter-content id="content" page="home.html"></ons-splitter-content>
+</ons-splitter>
+
+<template id="home.html">
+  <ons-page>
+    <ons-toolbar>
+      <div class="right">
+        <ons-toolbar-button onclick="fn.open()">
+          <ons-icon icon="md-menu"></ons-icon>
+        </ons-toolbar-button>
+      </div>
+      <div class="center">
+          精选
+      </div>
+    </ons-toolbar>
+    <div style="display: flex;flex-direction: column;align-items: center;">
+    	<a href="http://stevenzack.coding.me/asd" class="main">
+    		<img src="http://stevenzack.coding.me/asd/1.webp" style="max-width: 700px"><br>
+    		<span class="coverTitle">asdkhasd</span>
+    	</a>
+    </div>
+  </ons-page>
+</template>
+
+<template id="new.html">
+  <ons-page>
+    <ons-toolbar>
+      <div class="right">
+        <ons-toolbar-button onclick="fn.open()">
+          <ons-icon icon="md-menu"></ons-icon>
+        </ons-toolbar-button>
+      </div>
+      <div class="center">
+        新上传
+      </div>
+    </ons-toolbar>
+  </ons-page>
+</template>
+
+<template id="login.html">
+  <ons-page>
+    <ons-toolbar>
+      <div class="right">
+        <ons-toolbar-button onclick="fn.open()">
+          <ons-icon icon="md-menu"></ons-icon>
+        </ons-toolbar-button>
+      </div>
+      <div class="center">
+        登录
+      </div>
+    </ons-toolbar>
+    <p id="login-progress" style="display: none;margin-top: 0px;"><ons-progress-bar class="progressStyle" indeterminate></ons-progress-bar></p>
+    <div style="text-align: center; margin-top: 30px;">
+    <p><ons-input id="login-username" modifier="underbar" placeholder="Email" float></ons-input></p>
+    <p><ons-input id="login-password" modifier="underbar" type="password" placeholder="密码" float></ons-input></p>
+    <p style="margin-top: 30px;"><ons-button onclick="login(this)">登录</ons-button></p>
+  	</div>
+  </ons-page>
+</template>
+
+<script type="text/javascript">
+	window.fn = {};
+
+window.fn.open = function() {
+  var menu = document.getElementById('menu');
+  menu.open();
+};
+
+window.fn.load = function(page) {
+  var content = document.getElementById('content');
+  var menu = document.getElementById('menu');
+  content.load(page)
+    .then(menu.close.bind(menu));
+};
+</script>
+</body>
+</html>
