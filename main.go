@@ -1,13 +1,13 @@
 package main
 
 import (
-	"encoding/json"
+	// "bufio"
+	// "encoding/json"
 	"fmt"
 	"golang.org/x/net/websocket"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"html/template"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -33,6 +33,7 @@ type User struct {
 
 func main() {
 	http.HandleFunc("/", home)
+	http.Handle("/wsLogin", websocket.Handler(wsLogin))
 	http.ListenAndServe(":8090", nil)
 }
 func home(w http.ResponseWriter, r *http.Request) {
@@ -62,13 +63,12 @@ func home(w http.ResponseWriter, r *http.Request) {
 }
 
 func wsLogin(ws *websocket.Conn) {
-	b, e := ioutil.ReadAll(ws)
+	b := make([]byte, 512)
+	n, e := ws.Read(b)
 	checkErr(e)
-	u := User{}
-	e = json.Unmarshal(b, &u)
-	checkErr(e)
-	fmt.Println(u)
-	returnStr(ws, "OK")
+	fmt.Println(string(b[:n]))
+	ws.Write([]byte("OK"))
+	ws.Close()
 }
 func wsNew(ws *websocket.Conn) {
 
