@@ -5,9 +5,6 @@
 	<link rel="stylesheet" href="https://unpkg.com/onsenui/css/onsenui.css">
 	<link rel="stylesheet" href="https://unpkg.com/onsenui/css/onsen-css-components.min.css">
   	<script src="https://unpkg.com/onsenui/js/onsenui.min.js"></script>
-  	<script type="text/javascript">
-  		ons.platform.select('android')
-  	</script>
   	<style type="text/css">
   		.coverTitle{
   			color: #fff;
@@ -39,7 +36,8 @@
 		  }
 		  return "";
 		}
-  		function login(me) {
+  		function login() {
+  			var me=document.getElementById("login-submit")
   			me.disabled='disabled'
   			document.getElementById('login-progress').style.display = 'block'
   			var obj=new Object()
@@ -54,7 +52,7 @@
   				var obj=JSON.parse(evt.data)
   				if (obj.State=="OK") {
   					setCookie("TheyTubeSessionID",obj.Info,365)
-  					fn.load('home.html')
+  					location.href='/'
   				}else if (obj.State=="ERR") {
   					ons.notification.alert(obj.Info)
   				}
@@ -69,7 +67,8 @@
         		console.log(evt.data)
         	}
   		}
-  		function register(me) {
+  		function register() {
+  			var me=document.getElementById("register-submit")
   			me.disabled='disabled'
   			document.getElementById('register-progress').style.display = 'block'
   			var obj=new Object()
@@ -84,7 +83,7 @@
   				var obj=JSON.parse(evt.data)
   				if (obj.State=="OK") {
   					setCookie("TheyTubeSessionID",obj.Info,365)
-  					fn.load('home.html')
+  					location.href='/'
   				}else if (obj.State=="ERR") {
   					ons.notification.alert(obj.Info)
   				}
@@ -145,8 +144,8 @@
       </div>
     </ons-toolbar>
     <div style="display: flex;flex-direction: column;align-items: center;">
-    	<a href="http://stevenzack.coding.me/asd" class="main">
-    		<img src="http://stevenzack.coding.me/asd/1.webp" style="max-width: 700px"><br>
+    	<a href="http://stevenzack.coding.me/asd" class="main" style="max-width: 700px">
+    		<img src="http://stevenzack.coding.me/asd/1.webp" width="100%"><br>
     		<span class="coverTitle">asdkhasd</span>
     	</a>
     </div>
@@ -184,8 +183,14 @@
     <div style="text-align: center; margin-top: 30px;">
     <p><ons-input id="login-email" modifier="underbar" placeholder="Email" float></ons-input></p>
     <p><ons-input id="login-password" modifier="underbar" type="password" placeholder="密码" float></ons-input></p>
-    <p style="margin-top: 30px;"><ons-button onclick="login(this)">登录</ons-button></p>
+    <p style="margin-top: 30px;"><ons-button onclick="login()" id="login-submit">登录</ons-button></p>
   	</div>
+  	<script type="text/javascript">
+  		var password=document.getElementById("login-password")
+  		password.onkeyup=function(e) {
+  			if (e.keyCode==13) {login()}
+  		}
+  	</script>
   </ons-page>
 </template>
 <template id="register.html">
@@ -204,8 +209,14 @@
     <div style="text-align: center; margin-top: 30px;">
     <p><ons-input id="register-email" modifier="underbar" placeholder="Email" float></ons-input></p>
     <p><ons-input id="register-password" modifier="underbar" type="password" placeholder="密码" float></ons-input></p>
-    <p style="margin-top: 30px;"><ons-button onclick="register(this)">注册</ons-button></p>
+    <p style="margin-top: 30px;"><ons-button onclick="register(this)" id="register-submit">注册</ons-button></p>
   	</div>
+  	<script type="text/javascript">
+  		var password=document.getElementById("register-password")
+  		password.onkeyup=function(e) {
+  			if (e.keyCode==13) {register()}
+  		}
+  	</script>
   </ons-page>
 </template>
 
@@ -222,7 +233,10 @@
       </div>
     </ons-toolbar>
     <div style="text-align: center; margin-top: 30px;">
-    设置
+    <ons-list-title>账户设置</ons-list-title>
+    <ons-list>
+    	<ons-list-item onclick="setCookie('TheyTubeSessionID','',0);location.href='/';" tappable>退出当前账户</ons-list-item>
+    </ons-list>
   	</div>
   </ons-page>
 </template>
