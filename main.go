@@ -8,7 +8,6 @@ import (
 	"golang.org/x/net/websocket"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"html/template"
 	"io"
 	"net/http"
 	"os"
@@ -17,15 +16,17 @@ import (
 )
 
 type Video struct {
+	BaseInfo
 	Clips               []Clip
+	Vid                 string
 	Title, Introduction string
-	OwnerID             string
+	Owner               string
 	Cover               string
 	Count               int
 }
 type Clip struct {
-	Title, Vid string
-	Links      []Link
+	Title string
+	Links []Link
 }
 type Link struct {
 	Title, Str string
@@ -40,35 +41,30 @@ type BaseInfo struct {
 }
 
 func main() {
-	http.HandleFunc("/", home)
+	http.Handle("/home", websocket.Handler(home))
 	http.Handle("/wsLogin", websocket.Handler(wsLogin))
 	http.Handle("/wsRegister", websocket.Handler(wsRegister))
+	http.Handle("/wsGetVideo", websocket.Handler(wsGetVideo))
 	http.ListenAndServe(":8090", nil)
 }
-func home(w http.ResponseWriter, r *http.Request) {
-	hd := struct {
-		LoginedIn bool
-		Email     string
-	}{
-		false,
-		"",
+func home(ws *websocket.Conn) {
+	defer ws.Close()
+	b := make([]byte, 512)
+	n, e := ws.Read(b)
+	if testErr(e) {
+		return
 	}
-	sid, e := r.Cookie("TheyTubeSessionID")
-	if e == nil {
-		s, e := mgo.Dial("127.0.0.1")
-		checkErr(e)
-		defer s.Close()
-		uc := s.DB("theytube").C("users")
-		u := User{}
-		e = uc.Find(bson.M{"sessionid": sid.Value}).One(&u)
-		if e == nil {
-			hd.LoginedIn = true
-			hd.Email = u.Email
-		}
+	bi := BaseInfo{}
+	e = json.Unmarshal(b[:n], &bi)
+	if testErr(e) {
+		return
 	}
-	t, e := template.ParseFiles("index.html")
-	checkErr(e)
-	t.Execute(w, hd)
+	gu, e := findUser(bson.M{"sid": bi.Info})
+	if e != nil {
+		returnInfo(ws, "ERR", "登录信息失效")
+		return
+	}
+	returnInfo(ws, "OK", gu.Email)
 }
 
 func wsLogin(ws *websocket.Conn) {
@@ -121,13 +117,68 @@ func wsRegister(ws *websocket.Conn) {
 	returnInfo(ws, "OK", u.SessionID)
 }
 func wsNew(ws *websocket.Conn) {
-
+	defer ws.Close()
+	b := make([]byte, 1024)
+	l, e := ws.Read(b)
+	if testErr(e) {
+		return
+	}
+	v := BaseInfo{}
+	e = json.Unmarshal(b[:l], &v)
+	if testErr(e) {
+		return
+	}
 }
 func wsUpload(ws *websocket.Conn) {
-
+	defer ws.Close()
+	b := make([]byte, 2048)
+	l, e := ws.Read(b)
+	if testErr(e) {
+		return
+	}
+	v := Video{}
+	e = json.Unmarshal(b[:l], &v)
+	if testErr(e) {
+		return
+	}
+	_, e = findUser(bson.M{"sid": v.Info, "email": v.Owner})
+	if e != nil {
+		returnInfo(ws, "ERR", "您没有权限上传")
+		return
+	}
+	s, e := mgo.Dial("127.0.0.1")
+	checkErr(e)
+	defer s.Close()
+	cv := s.DB("theytube").C("videos")
+	v.Vid = NewToken()
+	e = cv.Insert(&v)
+	if testErr(e) {
+		returnInfo(ws, "ERR", "INSERT失败:"+e.Error())
+		return
+	}
+	returnInfo(ws, "OK", v.Vid)
 }
 func wsGetVideo(ws *websocket.Conn) {
-
+	defer ws.Close()
+	b := make([]byte, 1024)
+	l, e := ws.Read(b)
+	if testErr(e) {
+		return
+	}
+	bi := BaseInfo{}
+	e = json.Unmarshal(b[:l], &bi)
+	if testErr(e) {
+		return
+	}
+	v, e := findVideo(bson.M{"vid": bi.Info})
+	if testErr(e) {
+		returnInfo(ws, "ERR", "该视频不存在")
+		return
+	}
+	v.State = "OK"
+	data, e := json.Marshal(v)
+	checkErr(e)
+	ws.Write(data)
 }
 func checkErr(e error) {
 	if e != nil {
@@ -180,4 +231,13 @@ func NewToken() string {
 	io.WriteString(h5, strconv.FormatInt(ct, 10))
 	token := fmt.Sprintf("%x", h5.Sum(nil))
 	return token
+}
+func findVideo(m bson.M) (Video, error) {
+	s, e := mgo.Dial("127.0.0.1")
+	checkErr(e)
+	defer s.Close()
+	uv := s.DB("theytube").C("users")
+	v := Video{}
+	e = uv.Find(m).One(&v)
+	return v, e
 }

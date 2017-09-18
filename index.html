@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>TheyTube - Watch free video online</title>
-	<link rel="stylesheet" href="https://unpkg.com/onsenui/css/onsenui.css">
-	<link rel="stylesheet" href="https://unpkg.com/onsenui/css/onsen-css-components.min.css">
-  	<script src="https://unpkg.com/onsenui/js/onsenui.min.js"></script>
+	<title>TheyTube - Watch free videos online</title>
+	  <link rel="stylesheet" href="onsenui/css/onsenui.css">
+  <link rel="stylesheet" href="onsenui/css/onsen-css-components.min.css">
+  <script src="onsenui/js/onsenui.min.js"></script>
   	<style type="text/css">
   		.coverTitle{
   			color: #fff;
@@ -19,7 +19,8 @@
   		}
   	</style>
   	<script type="text/javascript">
-  		window.serverAddr='192.168.1.150:8090'
+  		window.serverAddr='localhost:8090'
+  		ons.platform.select('android')
   		function setCookie(cname,cvalue,exdays){
 		  var d = new Date();
 		  d.setTime(d.getTime()+(exdays*24*60*60*1000));
@@ -117,25 +118,22 @@
         		ons.notification.alert("未联网")
         	}
   		}
+  		function doOnLoad() {
+  			console.log('do on load')
+
+  		}
+  		setTimeout('doOnLoad()', 1000)
   	</script>
 </head>
 <body>
 <ons-splitter>
   <ons-splitter-side id="menu" side="right" width="260px" collapse swipeable>
     <ons-page>
-      {{if .LoginedIn}}
-      <ons-list-title>{{.Email}}</ons-list-title>
+      <ons-list-title id="split-about-me-title">关于我</ons-list-title>
       <ons-list>
-      	<ons-list-item onclick="fn.load('myPage.html')" tappable>我的主页</ons-list-item>
-      	<ons-list-item onclick="fn.load('settings.html')" tappable>设置</ons-list-item>
+      	<ons-list-item id="split-about-me-1" onclick="fn.load('login.html')" tappable>登录</ons-list-item>
+      	<ons-list-item id="split-about-me-2" onclick="fn.load('register.html')" tappable>注册</ons-list-item>
       </ons-list>
-      {{else}}
-      <ons-list-title>关于我</ons-list-title>
-      <ons-list>
-      	<ons-list-item onclick="fn.load('login.html')" tappable>登录</ons-list-item>
-      	<ons-list-item onclick="fn.load('register.html')" tappable>注册</ons-list-item>
-      </ons-list>
-      {{end}}
       <ons-list-title>快速导航</ons-list-title>
       <ons-list>
         <ons-list-item onclick="fn.load('home.html')" tappable>
