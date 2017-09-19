@@ -5,6 +5,7 @@
 <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
 <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-exp.min.css">
 <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-icons.min.css">
+<script src="https://unpkg.com/vue"></script>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
   <script type="text/javascript">
@@ -106,22 +107,59 @@
         		ons.notification.alert("未联网")
         }
   		}
+      function switchTab(target,str_id) {
+        document.getElementById("tab-home").className='tab-item'
+        document.getElementById("tab-new").className='tab-item'
+        document.getElementById("tab-me").className='tab-item'
+        target.className='tab-item active'
+        document.getElementById("homePage").style.display = 'none'
+        document.getElementById("newPage").style.display = 'none'
+        document.getElementById("mePage").style.display = 'none'
+        document.getElementById(str_id).style.display = 'block'
+      }
   		function doOnLoad() {
   			console.log('do on load')
   		}
   		setTimeout('doOnLoad()', 1000)
   </script>
   <style>
+  .tab-content{
+    display: none;
+    max-width: 700px;
+    width: 100%;
+  }
 	</style>
 </head>
-<body>
-<button class="btn btn-lg">large button</button>
-<button class="btn btn-sm">small button</button>
-
-<button class="btn btn-block">block button</button>
-
-<button class="btn btn-primary btn-lg"><i class="icon icon-arrow-left"></i> large</button>
-<button class="btn btn-primary"><i class="icon icon-arrow-left"></i> normal</button>
-<button class="btn btn-primary btn-sm"><i class="icon icon-arrow-left"></i> small</button>
+<body style="padding: 0px;">
+<div style="display: flex;flex-direction: column;align-items: center;box-shadow: 2px 2px 2px #ddd;">
+  <div style="display: flex;width: 100%; justify-content: space-between;align-items: center;">
+    <span style="padding: 5px;color: #000;"><b>TheyTube</b></span>
+    <i class="icon icon-search" style="margin-right: 10px;color: #000;"></i>
+  </div>
+  <div style="max-width: 700px;width: 100%;">
+    <ul class="tab tab-block" style="margin: 0px;">
+      <li class="tab-item active" id="tab-home" onclick="switchTab(this,'homePage')">
+        <a>home</a>
+      </li>
+      <li class="tab-item" id="tab-new" onclick="switchTab(this,'newPage')">
+        <a>new</a>
+      </li>
+      <li class="tab-item" id="tab-me" onclick="switchTab(this,'mePage')">
+        <a>me</a>
+      </li>
+    </ul>
+  </div>
+</div>
+<div style="display: flex;flex-direction: column;align-items: center;">
+<div id="homePage" class="tab-content" style="display: block;">
+ home
+</div>
+<div id="newPage" class="tab-content">
+  new
+</div>
+<div id="mePage" class="tab-content">
+  me
+</div>
+</div>
 </body>
 </html>
