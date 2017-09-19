@@ -5,6 +5,7 @@
 <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
 <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-exp.min.css">
 <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-icons.min.css">
+<meta name="theme-color" content="#ddd">
 <script src="https://unpkg.com/vue"></script>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
@@ -27,11 +28,13 @@
   		  return "";
   		}
   		function login() {
+
   			var obj=new Object()
   			obj.Email=document.getElementById("login-email").value
   			obj.Password=document.getElementById("login-password").value
   			if (obj.Email=="") {
   				ons.notification.alert('Email不能为空')
+
   				return
   			}
   			if (obj.Password=="") {
@@ -139,13 +142,13 @@
   <div style="max-width: 700px;width: 100%;">
     <ul class="tab tab-block" style="margin: 0px;">
       <li class="tab-item active" id="tab-home" onclick="switchTab(this,'homePage')">
-        <a>home</a>
+        <a>首页</a>
       </li>
       <li class="tab-item" id="tab-new" onclick="switchTab(this,'newPage')">
-        <a>new</a>
+        <a>新上传</a>
       </li>
       <li class="tab-item" id="tab-me" onclick="switchTab(this,'mePage')">
-        <a>me</a>
+        <a>我</a>
       </li>
     </ul>
   </div>
@@ -158,8 +161,37 @@
   new
 </div>
 <div id="mePage" class="tab-content">
-  me
+  <ul class="menu">
+    <li class="divider" data-content="账号"></li>
+    <li class="menu-item">
+      <a href="#" onclick="document.getElementById('modal-login').className='modal active'"><i class="icon icon-people"></i> 登录/注册</a>
+    </li>
+    <li class="divider"></li>
+    <li class="menu-item">
+      <a href="#"><i class="icon icon-menu"></i> 设置</a>
+    </li>
+  </ul>
 </div>
+</div>
+
+<div class="modal" id="modal-login">
+  <div class="modal-overlay"></div>
+  <div class="modal-container">
+    <div class="modal-header">
+      <button class="btn btn-clear float-right" onclick="document.getElementById('modal-login').className='modal'"></button>
+      <div class="modal-title"><b>登录</b></div>
+    </div>
+    <div class="modal-body">
+      <div class="content">
+        <input type="text" id="login-email" name="email" class="form-input" placeholder="Email"><br>
+        <input type="password" id="login-password" name="password" class="form-input" placeholder="密码" maxlength="25" minlength="6">
+        <span id="login-info" style="color: red;"></span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-lg" onclick="login()" id="login-submit">登录</button>
+    </div>
+  </div>
 </div>
 </body>
 </html>
