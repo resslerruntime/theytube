@@ -27,18 +27,21 @@
   		  }
   		  return "";
   		}
+      function showInfo(str) {
+        window.modalInfo.Info=str
+        document.getElementById("modal-info").className='modal active'
+      }
   		function login() {
-
+        var result=document.getElementById("login-info")
   			var obj=new Object()
   			obj.Email=document.getElementById("login-email").value
   			obj.Password=document.getElementById("login-password").value
   			if (obj.Email=="") {
-  				ons.notification.alert('Email不能为空')
-
+          result.innerHTML='Email不能为空'
   				return
   			}
   			if (obj.Password=="") {
-  				ons.notification.alert("密码不能为空")
+          result.innerHTML='密码不能为空'
   				return
   			}
   			var me=document.getElementById("login-submit")
@@ -54,9 +57,9 @@
   				var obj=JSON.parse(evt.data)
   				if (obj.State=="OK") {
   					setCookie("TheyTubeSessionID",obj.Info,365)
-  					location.href='/'
+  					location.href='index.html'
   				}else if (obj.State=="ERR") {
-  					ons.notification.alert(obj.Info)
+  					result.innerHTML=obj.Info
   				}
   				ws.close()
   			}
@@ -67,7 +70,7 @@
         }
         ws.onerror=function(evt){
         		console.log(evt.data)
-        		ons.notification.alert("未联网")
+        		result.innerHTML="未联网"
         }
   		}
   		function register() {
@@ -121,9 +124,32 @@
         document.getElementById(str_id).style.display = 'block'
       }
   		function doOnLoad() {
-  			console.log('do on load')
+  			var sid=getCookie('TheyTubeSessionID')
+        if (sid==''||sid==null) {return;}
+        var obj=new Object()
+        obj.State='home'
+        obj.Info=sid
+        var ws=new WebSocket("ws://"+window.serverAddr+"/home")
+        ws.onopen=function(evt) {
+          console.log('home on open')
+          ws.send(JSON.stringify(obj))
+        }
+        ws.onmessage=function(evt) {
+          console.log('home on msg:'+evt.data)
+          var gobj=JSON.parse(evt.data)
+          if (gobj.State=="OK") {
+            window.mePage.LoggedIn=true
+            window.mePage.Email=gobj.Info
+            window.mePage.EmailURL='/u?email='+encodeURIComponent(gobj.Info)
+          }else if (gobj.State=="ERR") {
+            setCookie('TheyTubeSessionID','',0)
+            showInfo(gobj.Info)
+          }
+          ws.close()
+        }
+        ws.onclose=function(evt) {console.log('home on close');}
+        ws.onerror=function(evt) {console.log('home on err:'+evt.data);}
   		}
-  		setTimeout('doOnLoad()', 1000)
   </script>
   <style>
   .tab-content{
@@ -161,16 +187,27 @@
   new
 </div>
 <div id="mePage" class="tab-content">
-  <ul class="menu">
-    <li class="divider" data-content="账号"></li>
-    <li class="menu-item">
-      <a href="#" onclick="document.getElementById('modal-login').className='modal active'"><i class="icon icon-people"></i> 登录/注册</a>
-    </li>
-    <li class="divider"></li>
-    <li class="menu-item">
-      <a href="#"><i class="icon icon-menu"></i> 设置</a>
-    </li>
-  </ul>
+  <div v-if="LoggedIn">
+    <ul class="menu">
+      <li class="divider" data-content="账号"></li>
+      <li class="menu-item">
+          <a :href="EmailURL"><i class="icon icon-people"></i> {{Email}}</a>
+          <a href="#" onclick="setCookie('TheyTubeSessionID','',0);location.href='index.html';"><i class="icon icon-people"></i> 退出账号</a>
+      </li>
+      <li class="divider"></li>
+      <li class="menu-item">
+        <a href="#"><i class="icon icon-menu"></i> 设置</a>
+      </li>
+    </ul>
+  </div>
+  <div v-else>
+    <ul class="menu">
+      <li class="divider" data-content="账号"></li>
+      <li class="menu-item">
+          <a href="#" onclick="document.getElementById('modal-login').className='modal active'"><i class="icon icon-people"></i> 登录/注册</a>
+      </li>
+    </ul>
+  </div>
 </div>
 </div>
 
@@ -186,6 +223,7 @@
         <input type="text" id="login-email" name="email" class="form-input" placeholder="Email"><br>
         <input type="password" id="login-password" name="password" class="form-input" placeholder="密码" maxlength="25" minlength="6">
         <span id="login-info" style="color: red;"></span>
+        <div class="loading" style="margin-top: 5px;display: none;" id="login-progress"></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -193,5 +231,36 @@
     </div>
   </div>
 </div>
+<div class="modal" id="modal-info">
+  <div class="modal-overlay"></div>
+  <div class="modal-container">
+    <div class="modal-header">
+      <button class="btn btn-clear float-right" onclick="document.getElementById('modal-info').className='modal'"></button>
+      <div class="modal-title"><b>提示</b></div>
+    </div>
+    <div class="modal-body">
+      <div class="content">
+        {{Info}}
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+  window.mePage=new Vue({
+    el:'#mePage',
+    data:{
+      LoggedIn:false,
+      Email:'',
+      EmailURL:''
+    }
+  })
+  window.modalInfo=new Vue({
+    el:"#modal-info",
+    data:{
+      Info:''
+    }
+  })
+  setTimeout('doOnLoad()', 500)
+</script>
 </body>
 </html>

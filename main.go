@@ -59,7 +59,7 @@ func home(ws *websocket.Conn) {
 	if testErr(e) {
 		return
 	}
-	gu, e := findUser(bson.M{"sid": bi.Info})
+	gu, e := findUser(bson.M{"sessionid": bi.Info})
 	if e != nil {
 		returnInfo(ws, "ERR", "登录信息失效")
 		return
