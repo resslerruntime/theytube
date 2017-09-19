@@ -2,9 +2,9 @@
 <html>
 <head>
 	<title>TheyTube - Watch free videos online</title>
-	<link rel="stylesheet" type="text/css" href="mdl/icon.css">
-	<link rel="stylesheet" type="text/css" href="mdl/material.min.css">
-	<script src="mdl/material.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
+<link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-exp.min.css">
+<link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-icons.min.css">
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
   <script type="text/javascript">
@@ -115,47 +115,13 @@
 	</style>
 </head>
 <body>
-<div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
-  <header class="mdl-layout__header">
-    <div class="mdl-layout__header-row">
-      <span class="mdl-layout-title" style="margin-left: -50px;">TheyTube</span>
-      <div class="mdl-layout-spacer"></div>
-      <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable
-                  mdl-textfield--floating-label mdl-textfield--align-right">
-        <label class="mdl-button mdl-js-button mdl-button--icon"
-               for="fixed-header-drawer-exp">
-          <i class="material-icons">search</i>
-        </label>
-        <div class="mdl-textfield__expandable-holder">
-          <input class="mdl-textfield__input" type="text" name="sample"
-                 id="fixed-header-drawer-exp">
-        </div>
-      </div>
-    </div>
-  </header>
-  <main class="mdl-layout__content">
-    <div class="page-content">
-    	<div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
-		  <div class="mdl-tabs__tab-bar">
-		      <a href="#home" class="mdl-tabs__tab is-active"><i class="material-icons">home</i></a>
-		      <a href="#new" class="mdl-tabs__tab"><i class="material-icons">theaters</i></a>
-		      <a href="#me" class="mdl-tabs__tab"><i class="material-icons">account_circle</i></a>
-		  </div>
+<button class="btn btn-lg">large button</button>
+<button class="btn btn-sm">small button</button>
 
-		  <div class="mdl-tabs__panel is-active" id="home">
-		    
-		  </div>
-		  <div class="mdl-tabs__panel" id="new">
-		    
-		  </div>
-		  <div class="mdl-tabs__panel" id="me">
-		    
-		  </div>
-		</div>
-    </div>
-  </main>
-</div>
+<button class="btn btn-block">block button</button>
 
-
+<button class="btn btn-primary btn-lg"><i class="icon icon-arrow-left"></i> large</button>
+<button class="btn btn-primary"><i class="icon icon-arrow-left"></i> normal</button>
+<button class="btn btn-primary btn-sm"><i class="icon icon-arrow-left"></i> small</button>
 </body>
 </html>
