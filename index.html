@@ -1,42 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>TheyTube - Watch free videos online</title>
-	  <link rel="stylesheet" href="onsenui/css/onsenui.css">
-  <link rel="stylesheet" href="onsenui/css/onsen-css-components.min.css">
-  <script src="onsenui/js/onsenui.min.js"></script>
-  	<style type="text/css">
-  		.coverTitle{
-  			color: #fff;
-  			margin-top: -50px;
-  			position: absolute;
-  			margin-left: 10px;
-  			font-size: 30px;
-  			text-shadow:#000 1px 0 0,#000 0 1px 0,#000 -1px 0 0,#000 0 -1px 0;
-  		}
-  		a{
-  			text-decoration: none;
-  		}
-  	</style>
-  	<script type="text/javascript">
+	<title></title>
+	<link rel="stylesheet" type="text/css" href="mdl/icon.css">
+	<link rel="stylesheet" type="text/css" href="mdl/material.min.css">
+	<script src="mdl/material.min.js"></script>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <script type="text/javascript">
   		window.serverAddr='localhost:8090'
-  		ons.platform.select('android')
   		function setCookie(cname,cvalue,exdays){
-		  var d = new Date();
-		  d.setTime(d.getTime()+(exdays*24*60*60*1000));
-		  var expires = "expires="+d.toGMTString();
-		  document.cookie = cname + "=" + cvalue + "; " + expires;
-		}
-		function getCookie(cname){
-		  var name = cname + "=";
-		  var ca = document.cookie.split(';');
-		  for(var i=0; i<ca.length; i++) 
-		  {
-		    var c = ca[i].trim();
-		    if (c.indexOf(name)==0) return c.substring(name.length,c.length);
-		  }
-		  return "";
-		}
+  		  var d = new Date();
+  		  d.setTime(d.getTime()+(exdays*24*60*60*1000));
+  		  var expires = "expires="+d.toGMTString();
+  		  document.cookie = cname + "=" + cvalue + "; " + expires;
+  		}
+  		function getCookie(cname){
+  		  var name = cname + "=";
+  		  var ca = document.cookie.split(';');
+  		  for(var i=0; i<ca.length; i++) 
+  		  {
+  		    var c = ca[i].trim();
+  		    if (c.indexOf(name)==0) return c.substring(name.length,c.length);
+  		  }
+  		  return "";
+  		}
   		function login() {
   			var obj=new Object()
   			obj.Email=document.getElementById("login-email").value
@@ -68,15 +56,15 @@
   				}
   				ws.close()
   			}
-			ws.onclose=function(evt){
-				console.log('on close')
-				document.getElementById('login-progress').style.display = 'none'
+			  ws.onclose=function(evt){
+				  console.log('on close')
+				  document.getElementById('login-progress').style.display = 'none'
   				me.disabled=''
-        	}
-        	ws.onerror=function(evt){
+        }
+        ws.onerror=function(evt){
         		console.log(evt.data)
         		ons.notification.alert("未联网")
-        	}
+        }
   		}
   		function register() {
   			var obj=new Object()
@@ -108,7 +96,7 @@
   				}
   				ws.close()
   			}
-			ws.onclose=function(evt){
+			 ws.onclose=function(evt){
 				console.log('on close')
 				document.getElementById('register-progress').style.display = 'none'
   				me.disabled=''
@@ -116,161 +104,74 @@
         	ws.onerror=function(evt){
         		console.log(evt.data)
         		ons.notification.alert("未联网")
-        	}
+        }
   		}
   		function doOnLoad() {
   			console.log('do on load')
-
   		}
   		setTimeout('doOnLoad()', 1000)
-  	</script>
+  </script>
+  <style>
+	</style>
 </head>
 <body>
-<ons-splitter>
-  <ons-splitter-side id="menu" side="right" width="260px" collapse swipeable>
-    <ons-page>
-      <ons-list-title id="split-about-me-title">关于我</ons-list-title>
-      <ons-list>
-      	<ons-list-item id="split-about-me-1" onclick="fn.load('login.html')" tappable>登录</ons-list-item>
-      	<ons-list-item id="split-about-me-2" onclick="fn.load('register.html')" tappable>注册</ons-list-item>
-      </ons-list>
-      <ons-list-title>快速导航</ons-list-title>
-      <ons-list>
-        <ons-list-item onclick="fn.load('home.html')" tappable>
-          首页
-        </ons-list-item>
-        <ons-list-item onclick="fn.load('new.html')" tappable>
-          新上传
-        </ons-list-item>
-      </ons-list>
-    </ons-page>
-  </ons-splitter-side>
-  <ons-splitter-content id="content" page="home.html"></ons-splitter-content>
-</ons-splitter>
-
-<template id="home.html">
-  <ons-page>
-    <ons-toolbar>
-      <div class="right">
-        <ons-toolbar-button onclick="fn.open()">
-          <ons-icon icon="md-menu"></ons-icon>
-        </ons-toolbar-button>
+<div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+  <header class="mdl-layout__header">
+    <div class="mdl-layout__header-row">
+      <span class="mdl-layout-title" style="margin-left: -50px;">TheyTube</span>
+      <div class="mdl-layout-spacer"></div>
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable
+                  mdl-textfield--floating-label mdl-textfield--align-right">
+        <label class="mdl-button mdl-js-button mdl-button--icon"
+               for="fixed-header-drawer-exp">
+          <i class="material-icons">search</i>
+        </label>
+        <div class="mdl-textfield__expandable-holder">
+          <input class="mdl-textfield__input" type="text" name="sample"
+                 id="fixed-header-drawer-exp">
+        </div>
       </div>
-      <div class="center">
-          首页
-      </div>
-    </ons-toolbar>
-    <div style="display: flex;flex-direction: column;align-items: center;">
-    	<a href="http://stevenzack.coding.me/asd" class="main" style="max-width: 700px">
-    		<img src="http://stevenzack.coding.me/asd/1.webp" width="100%"><br>
-    		<span class="coverTitle">asdkhasd</span>
-    	</a>
     </div>
-  </ons-page>
-</template>
+  </header>
+  <main class="mdl-layout__content">
+    <div class="page-content">
+    	<div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
+		  <div class="mdl-tabs__tab-bar">
+		      <a href="#starks-panel" class="mdl-tabs__tab is-active">Starks</a>
+		      <a href="#lannisters-panel" class="mdl-tabs__tab">Lannisters</a>
+		      <a href="#targaryens-panel" class="mdl-tabs__tab">Targaryens</a>
+		  </div>
 
-<template id="new.html">
-  <ons-page>
-    <ons-toolbar>
-      <div class="right">
-        <ons-toolbar-button onclick="fn.open()">
-          <ons-icon icon="md-menu"></ons-icon>
-        </ons-toolbar-button>
-      </div>
-      <div class="center">
-        新上传
-      </div>
-    </ons-toolbar>
-  </ons-page>
-</template>
+		  <div class="mdl-tabs__panel is-active" id="starks-panel">
+		    <ul>
+		      <li>Eddard</li>
+		      <li>Catelyn</li>
+		      <li>Robb</li>
+		      <li>Sansa</li>
+		      <li>Brandon</li>
+		      <li>Arya</li>
+		      <li>Rickon</li>
+		    </ul>
+		  </div>
+		  <div class="mdl-tabs__panel" id="lannisters-panel">
+		    <ul>
+		      <li>Tywin</li>
+		      <li>Cersei</li>
+		      <li>Jamie</li>
+		      <li>Tyrion</li>
+		    </ul>
+		  </div>
+		  <div class="mdl-tabs__panel" id="targaryens-panel">
+		    <ul>
+		      <li>Viserys</li>
+		      <li>Daenerys</li>
+		    </ul>
+		  </div>
+		</div>
+    </div>
+  </main>
+</div>
 
-<template id="login.html">
-  <ons-page>
-    <ons-toolbar>
-      <div class="right">
-        <ons-toolbar-button onclick="fn.open()">
-          <ons-icon icon="md-menu"></ons-icon>
-        </ons-toolbar-button>
-      </div>
-      <div class="center">
-        登录
-      </div>
-    </ons-toolbar>
-    <p id="login-progress" style="display: none;margin-top: 0px;"><ons-progress-bar class="progressStyle" indeterminate></ons-progress-bar></p>
-    <div style="text-align: center; margin-top: 30px;">
-    <p><ons-input id="login-email" modifier="underbar" placeholder="Email" float></ons-input></p>
-    <p><ons-input id="login-password" modifier="underbar" type="password" placeholder="密码" float></ons-input></p>
-    <p style="margin-top: 30px;"><ons-button onclick="login()" id="login-submit">登录</ons-button></p>
-  	</div>
-  	<script type="text/javascript">
-  		var password=document.getElementById("login-password")
-  		password.onkeyup=function(e) {
-  			if (e.keyCode==13) {login()}
-  		}
-  	</script>
-  </ons-page>
-</template>
-<template id="register.html">
-  <ons-page>
-    <ons-toolbar>
-      <div class="right">
-        <ons-toolbar-button onclick="fn.open()">
-          <ons-icon icon="md-menu"></ons-icon>
-        </ons-toolbar-button>
-      </div>
-      <div class="center">
-        注册
-      </div>
-    </ons-toolbar>
-    <p id="register-progress" style="display: none;margin-top: 0px;"><ons-progress-bar class="progressStyle" indeterminate></ons-progress-bar></p>
-    <div style="text-align: center; margin-top: 30px;">
-    <p><ons-input id="register-email" modifier="underbar" placeholder="Email" float></ons-input></p>
-    <p><ons-input id="register-password" modifier="underbar" type="password" placeholder="密码" float></ons-input></p>
-    <p style="margin-top: 30px;"><ons-button onclick="register(this)" id="register-submit">注册</ons-button></p>
-  	</div>
-  	<script type="text/javascript">
-  		var password=document.getElementById("register-password")
-  		password.onkeyup=function(e) {
-  			if (e.keyCode==13) {register()}
-  		}
-  	</script>
-  </ons-page>
-</template>
 
-<template id="settings.html">
-  <ons-page>
-    <ons-toolbar>
-      <div class="right">
-        <ons-toolbar-button onclick="fn.open()">
-          <ons-icon icon="md-menu"></ons-icon>
-        </ons-toolbar-button>
-      </div>
-      <div class="center">
-        设置
-      </div>
-    </ons-toolbar>
-    <div style="text-align: center; margin-top: 30px;">
-    <ons-list-title>账户设置</ons-list-title>
-    <ons-list>
-    	<ons-list-item onclick="setCookie('TheyTubeSessionID','',0);location.href='/';" tappable>退出当前账户</ons-list-item>
-    </ons-list>
-  	</div>
-  </ons-page>
-</template>
-<script type="text/javascript">
-	window.fn = {};
-
-window.fn.open = function() {
-  var menu = document.getElementById('menu');
-  menu.open();
-};
-
-window.fn.load = function(page) {
-  var content = document.getElementById('content');
-  var menu = document.getElementById('menu');
-  content.load(page)
-    .then(menu.close.bind(menu));
-};
-</script>
 </body>
 </html>
