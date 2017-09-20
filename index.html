@@ -10,7 +10,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
   <script type="text/javascript">
-  		window.serverAddr='localhost:8090'
+  		window.serverAddr='192.168.1.150:8090'
   		function setCookie(cname,cvalue,exdays){
   		  var d = new Date();
   		  d.setTime(d.getTime()+(exdays*24*60*60*1000));
@@ -74,43 +74,45 @@
         }
   		}
   		function register() {
-  			var obj=new Object()
-  			obj.Email=document.getElementById("register-email").value
-  			obj.Password=document.getElementById("register-password").value
-  			if (obj.Email=="") {
-  				ons.notification.alert('Email不能为空')
-  				return
-  			}
-  			if (obj.Password=="") {
-  				ons.notification.alert("密码不能为空")
-  				return
-  			}
-  			var me=document.getElementById("register-submit")
-  			me.disabled='disabled'
-  			document.getElementById('register-progress').style.display = 'block'
-  			var ws=new WebSocket("ws://"+window.serverAddr+"/wsRegister")
-  			ws.onopen=function(evt) {
-  				console.log('on open')
-  				ws.send(JSON.stringify(obj))
-  			}
-  			ws.onmessage=function(evt) {
-  				var obj=JSON.parse(evt.data)
-  				if (obj.State=="OK") {
-  					setCookie("TheyTubeSessionID",obj.Info,365)
-  					location.href='/'
-  				}else if (obj.State=="ERR") {
-  					ons.notification.alert(obj.Info)
-  				}
-  				ws.close()
-  			}
-			 ws.onclose=function(evt){
-				console.log('on close')
-				document.getElementById('register-progress').style.display = 'none'
-  				me.disabled=''
-        	}
-        	ws.onerror=function(evt){
-        		console.log(evt.data)
-        		ons.notification.alert("未联网")
+  			var result=document.getElementById("register-info")
+        var obj=new Object()
+        obj.Email=document.getElementById("register-email").value
+        obj.Password=document.getElementById("register-password").value
+        if (obj.Email=="") {
+          result.innerHTML='Email不能为空'
+          return
+        }
+        if (obj.Password=="") {
+          result.innerHTML='密码不能为空'
+          return
+        }
+        var me=document.getElementById("register-submit")
+        me.disabled='disabled'
+        document.getElementById('register-progress').style.display = 'block'
+        var ws=new WebSocket("ws://"+window.serverAddr+"/wsRegister")
+        ws.onopen=function(evt) {
+          console.log('on open')
+          ws.send(JSON.stringify(obj))
+        }
+        ws.onmessage=function(evt) {
+          console.log(evt.data)
+          var obj=JSON.parse(evt.data)
+          if (obj.State=="OK") {
+            setCookie("TheyTubeSessionID",obj.Info,365)
+            location.href='index.html'
+          }else if (obj.State=="ERR") {
+            result.innerHTML=obj.Info
+          }
+          ws.close()
+        }
+        ws.onclose=function(evt){
+          console.log('on close')
+          document.getElementById('register-progress').style.display = 'none'
+          me.disabled=''
+        }
+        ws.onerror=function(evt){
+            console.log(evt.data)
+            result.innerHTML="未联网"
         }
   		}
       function switchTab(target,str_id) {
@@ -129,7 +131,7 @@
         var obj=new Object()
         obj.State='home'
         obj.Info=sid
-        var ws=new WebSocket("ws://"+window.serverAddr+"/home")
+        var ws=new WebSocket("ws://"+window.serverAddr+"/wshome")
         ws.onopen=function(evt) {
           console.log('home on open')
           ws.send(JSON.stringify(obj))
@@ -192,11 +194,10 @@
       <li class="divider" data-content="账号"></li>
       <li class="menu-item">
           <a :href="EmailURL"><i class="icon icon-people"></i> {{Email}}</a>
-          <a href="#" onclick="setCookie('TheyTubeSessionID','',0);location.href='index.html';"><i class="icon icon-people"></i> 退出账号</a>
       </li>
       <li class="divider"></li>
       <li class="menu-item">
-        <a href="#"><i class="icon icon-menu"></i> 设置</a>
+        <a onclick="document.getElementById('modal-settings').className='modal active'"><i class="icon icon-menu" ></i> 设置</a>
       </li>
     </ul>
   </div>
@@ -204,7 +205,8 @@
     <ul class="menu">
       <li class="divider" data-content="账号"></li>
       <li class="menu-item">
-          <a href="#" onclick="document.getElementById('modal-login').className='modal active'"><i class="icon icon-people"></i> 登录/注册</a>
+          <a onclick="document.getElementById('modal-login').className='modal active'"><i class="icon icon-people"></i> 登录</a>
+          <a onclick="document.getElementById('modal-register').className='modal active'"><i class="icon icon-people"></i> 注册</a>
       </li>
     </ul>
   </div>
@@ -231,6 +233,26 @@
     </div>
   </div>
 </div>
+<div class="modal" id="modal-register">
+  <div class="modal-overlay"></div>
+  <div class="modal-container">
+    <div class="modal-header">
+      <button class="btn btn-clear float-right" onclick="document.getElementById('modal-register').className='modal'"></button>
+      <div class="modal-title"><b>注册</b></div>
+    </div>
+    <div class="modal-body">
+      <div class="content">
+        <input type="text" id="register-email" name="email" class="form-input" placeholder="Email"><br>
+        <input type="password" id="register-password" name="password" class="form-input" placeholder="密码" maxlength="25" minlength="6">
+        <span id="register-info" style="color: red;"></span>
+        <div class="loading" style="margin-top: 5px;display: none;" id="register-progress"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-lg" onclick="register()" id="register-submit">注册</button>
+    </div>
+  </div>
+</div>
 <div class="modal" id="modal-info">
   <div class="modal-overlay"></div>
   <div class="modal-container">
@@ -241,6 +263,22 @@
     <div class="modal-body">
       <div class="content">
         {{Info}}
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal" id="modal-settings">
+  <div class="modal-overlay"></div>
+  <div class="modal-container">
+    <div class="modal-header">
+      <button class="btn btn-clear float-right" onclick="document.getElementById('modal-settings').className='modal'"></button>
+      <div class="modal-title"><b>设置</b></div>
+    </div>
+    <div class="modal-body">
+      <div class="content">
+        <ul class="menu">
+          <li class="menu-item"><a onclick="setCookie('TheyTubeSessionID','',0);location.href='index.html';"><i class="icon icon-forward"></i>退出账号</a></li>
+        </ul>
       </div>
     </div>
   </div>

@@ -41,13 +41,13 @@ type BaseInfo struct {
 }
 
 func main() {
-	http.Handle("/home", websocket.Handler(home))
+	http.Handle("/wshome", websocket.Handler(wshome))
 	http.Handle("/wsLogin", websocket.Handler(wsLogin))
 	http.Handle("/wsRegister", websocket.Handler(wsRegister))
 	http.Handle("/wsGetVideo", websocket.Handler(wsGetVideo))
 	http.ListenAndServe(":8090", nil)
 }
-func home(ws *websocket.Conn) {
+func wshome(ws *websocket.Conn) {
 	defer ws.Close()
 	b := make([]byte, 512)
 	n, e := ws.Read(b)
