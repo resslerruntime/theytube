@@ -26,6 +26,9 @@
   		  }
   		  return "";
   		}
+      function testImg(str) {
+        document.getElementById("upload-img-test").src=str
+      }
       function showInfo(str) {
         window.modalInfo.Info=str
         document.getElementById("modal-info").className='modal active'
@@ -191,6 +194,14 @@
   }
   a{
     cursor: pointer;
+    text-decoration: none;
+    color: #555;
+  }
+  .row-container{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
   }
 	</style>
 </head>
@@ -334,20 +345,26 @@
     <div class="modal-body">
       <div class="content">
           <div class="divider" data-content="基本信息"></div>
-          <input type="text" class="form-input" name="upload-title" placeholder="总标题" :value="Title"><br>
-          <textarea name="upload-intro" class="form-input" placeholder="介绍">{{Introduction}}</textarea><br>
-          <input type="text" class="form-input" :value="Cover" placeholder="封面链接">
+          <div>
+            <input type="text" class="form-input" placeholder="总标题" v-model="Title">
+            <input type="text" class="form-input" placeholder="介绍" v-model="Introduction">
+            <div class="row-container"><div style="flex-grow: 1;"><input type="text" class="form-input" v-model="Cover" placeholder="封面链接"></div><a style="flex-grow: 0" onclick="testImg(window.uploadPage.Cover)">测试</a></div>
+          </div>
           <div class="divider" data-content="分集"></div>
           <ol class="menu">
-            <li class="menu-item" v-for="clip in Clips">
-              <input type="text" class="form-input" placeholder="集标题" :value="clip.Title"><br>
-              <div v-for="link in clip.Links"><input class="form-input" type="text" placeholder="视频链接" :value="link"></div>
-              <button class="btn btn-link">添加备用链接</button>
+            <li class="menu-item" v-for="(clip,cindex) in Clips">
+              <input type="text" class="form-input" placeholder="集标题" v-model="Clips[cindex].Title">
+              <div v-for="(link,lindex) in clip.Links">
+                <div class="row-container"><div style="flex-grow: 1;">
+                  <input class="form-input" type="text" placeholder="视频链接" v-model="Clips[cindex].Links[lindex]">
+                </div><a style="flex-grow: 0" v-on:click="testVideo(Clips[cindex].Links[lindex])">测试</a></div>
+              </div>
+              <button style="color: #555;" class="btn btn-link" v-on:click="Clips[cindex].Links.push('')">添加备用链接</button>
             </li>
           </ol>
-          <button class="btn btn-link">添加集</button>
+          <button class="btn btn-link" style="color: #555;" onclick="window.uploadPage.Clips.push({Title:'',Links:['']})">添加集</button>
           <div class="divider" data-content="测试可播放性"></div>
-          <video id="upload-v-test"></video>
+          <video id="upload-v-test" autoplay controls></video>
           <img id="upload-img-test">
         </ul>
       </div>
@@ -379,7 +396,10 @@
       Clips:[
         {Title:'',Links:['']}
       ],
-      Owner:''
+      Owner:'',
+      testVideo:function(str) {
+        document.getElementById("upload-v-test").src=str
+      }
     }
   })
   window.modalInfo=new Vue({
