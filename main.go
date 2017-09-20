@@ -43,6 +43,7 @@ type BaseInfo struct {
 func main() {
 	http.Handle("/wshome", websocket.Handler(wshome))
 	http.Handle("/wsLogin", websocket.Handler(wsLogin))
+	http.Handle("/wsNew", websocket.Handler(wsNew))
 	http.Handle("/wsRegister", websocket.Handler(wsRegister))
 	http.Handle("/wsGetVideo", websocket.Handler(wsGetVideo))
 	http.ListenAndServe(":8090", nil)
@@ -121,13 +122,40 @@ func wsNew(ws *websocket.Conn) {
 	b := make([]byte, 1024)
 	l, e := ws.Read(b)
 	if testErr(e) {
+		returnInfo(ws, "ERR", e.Error())
 		return
 	}
-	v := BaseInfo{}
-	e = json.Unmarshal(b[:l], &v)
+	bi := BaseInfo{}
+	e = json.Unmarshal(b[:l], &bi)
 	if testErr(e) {
+		returnInfo(ws, "ERR", e.Error())
 		return
 	}
+	pageNum, e := strconv.ParseInt(bi.Info, 10, 64)
+	if testErr(e) {
+		returnInfo(ws, "ERR", "String err")
+		return
+	}
+	s, e := mgo.Dial("127.0.0.1")
+	checkErr(e)
+	defer s.Close()
+	cv := s.DB("theytube").C("videos")
+	vs := []Video{}
+	e = cv.Find(nil).Limit(20).Skip(int(pageNum) * 20).All(&vs)
+	if testErr(e) {
+		returnInfo(ws, "ERR", e.Error())
+		return
+	}
+	rdata := struct {
+		BaseInfo
+		Data []Video
+	}{
+		BaseInfo{"OK", ""},
+		vs,
+	}
+	data, e := json.Marshal(rdata)
+	checkErr(e)
+	ws.Write(data)
 }
 func wsUpload(ws *websocket.Conn) {
 	defer ws.Close()

@@ -2,11 +2,10 @@
 <html>
 <head>
 	<title>TheyTube - Watch free videos online</title>
-<link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
-<link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-exp.min.css">
-<link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-icons.min.css">
+<link rel="stylesheet" href="css/spectre.min.css">
+<link rel="stylesheet" href="css/spectre-icons.min.css">
 <meta name="theme-color" content="#ddd">
-<script src="https://unpkg.com/vue"></script>
+<script src="js/vue.js"></script>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
   <script type="text/javascript">
@@ -125,6 +124,37 @@
         document.getElementById("mePage").style.display = 'none'
         document.getElementById(str_id).style.display = 'block'
       }
+      function getNewData(pageNum,refresh) {
+        if (pageNum=="") {
+          pageNum="1"
+        }
+        var obj=new Object()
+        obj.State="new"
+        obj.Info=pageNum
+        var ws=new WebSocket("ws://"+window.serverAddr+"/wsNew")
+        ws.onopen=function(evt) {
+          console.log('new on open')
+          ws.send(JSON.stringify(obj))
+        }
+        ws.onmessage=function(evt) {
+          console.log('new msg:'+evt.data)
+          var gobj=JSON.parse(evt.data)
+          if (gobj.State=="OK") {
+            if (refresh) {
+              window.newPage.videos=gobj.Data
+            }
+          }else{
+            console.log('new err : '+gobj.Info)
+          }
+          ws.close()
+        }
+        ws.onclose=function(evt) {
+          console.log('new on close')
+        }
+        ws.onerror=function(evt) {
+          console.log('new on err : '+evt.data)
+        }
+      }
   		function doOnLoad() {
   			var sid=getCookie('TheyTubeSessionID')
         if (sid==''||sid==null) {return;}
@@ -186,7 +216,15 @@
  home
 </div>
 <div id="newPage" class="tab-content">
-  new
+  <div v-for="video in videos" class="card">
+    <div class="card-image">
+      <img :src="video.Cover" class="img-responsive">
+    </div>
+    <div class="card-header">
+      <div class="card-title h5">{{video.Title}}</div>
+      <div class="card-subtitle text-gray">{{video.ShortIntro}}</div>
+    </div>
+  </div>
 </div>
 <div id="mePage" class="tab-content">
   <div v-if="LoggedIn">
@@ -284,6 +322,12 @@
   </div>
 </div>
 <script type="text/javascript">
+  window.newPage=new Vue({
+    el:'#newPage',
+    data:{
+      videos:[]
+    }
+  })
   window.mePage=new Vue({
     el:'#mePage',
     data:{
@@ -299,6 +343,7 @@
     }
   })
   setTimeout('doOnLoad()', 500)
+  setTimeout("getNewData('1',true)", 500)
 </script>
 </body>
 </html>
