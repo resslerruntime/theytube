@@ -230,9 +230,9 @@
   <div v-if="LoggedIn">
     <ul class="menu">
       <li class="divider" data-content="账号"></li>
-      <li class="menu-item">
-          <a :href="EmailURL"><i class="icon icon-people"></i> {{Email}}</a>
-      </li>
+      <li class="menu-item"><a :href="EmailURL"><i class="icon icon-people"></i> {{Email}}</a></li>
+      <li class="divider" data-content="视频"></li>
+      <li class="menu-item"><a onclick="document.getElementById('modal-upload').className='modal active'"><i class="icon icon-upward"></i>上传</a></li>
       <li class="divider"></li>
       <li class="menu-item">
         <a onclick="document.getElementById('modal-settings').className='modal active'"><i class="icon icon-menu" ></i> 设置</a>
@@ -317,6 +317,20 @@
         <ul class="menu">
           <li class="menu-item"><a onclick="setCookie('TheyTubeSessionID','',0);location.href='index.html';"><i class="icon icon-forward"></i>退出账号</a></li>
         </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal" id="modal-upload">
+  <div class="modal-overlay"></div>
+  <div class="modal-container">
+    <div class="modal-header">
+      <button class="btn btn-clear float-right" onclick="document.getElementById('modal-upload').className='modal'"></button>
+      <div class="modal-title"><b>上传</b></div>
+    </div>
+    <div class="modal-body">
+      <div class="content">
+        
       </div>
     </div>
   </div>

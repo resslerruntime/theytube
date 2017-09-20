@@ -141,7 +141,7 @@ func wsNew(ws *websocket.Conn) {
 	defer s.Close()
 	cv := s.DB("theytube").C("videos")
 	vs := []Video{}
-	e = cv.Find(nil).Limit(20).Skip(int(pageNum) * 20).All(&vs)
+	e = cv.Find(nil).Limit(20).Skip(int(pageNum-1) * 20).All(&vs)
 	if testErr(e) {
 		returnInfo(ws, "ERR", e.Error())
 		return
@@ -169,7 +169,7 @@ func wsUpload(ws *websocket.Conn) {
 	if testErr(e) {
 		return
 	}
-	_, e = findUser(bson.M{"sid": v.Info, "email": v.Owner})
+	_, e = findUser(bson.M{"sessionid": v.Info})
 	if e != nil {
 		returnInfo(ws, "ERR", "您没有权限上传")
 		return
