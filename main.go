@@ -26,11 +26,7 @@ type Video struct {
 }
 type Clip struct {
 	Title string
-	Links []Link
-}
-type Link struct {
-	Title, Str string
-	Count      int
+	Links []string
 }
 type User struct {
 	BaseInfo

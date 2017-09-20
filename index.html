@@ -189,6 +189,9 @@
     max-width: 700px;
     width: 100%;
   }
+  a{
+    cursor: pointer;
+  }
 	</style>
 </head>
 <body style="padding: 0px;">
@@ -330,7 +333,23 @@
     </div>
     <div class="modal-body">
       <div class="content">
-        
+          <div class="divider" data-content="基本信息"></div>
+          <input type="text" class="form-input" name="upload-title" placeholder="总标题" :value="Title"><br>
+          <textarea name="upload-intro" class="form-input" placeholder="介绍">{{Introduction}}</textarea><br>
+          <input type="text" class="form-input" :value="Cover" placeholder="封面链接">
+          <div class="divider" data-content="分集"></div>
+          <ol class="menu">
+            <li class="menu-item" v-for="clip in Clips">
+              <input type="text" class="form-input" placeholder="集标题" :value="clip.Title"><br>
+              <div v-for="link in clip.Links"><input class="form-input" type="text" placeholder="视频链接" :value="link"></div>
+              <button class="btn btn-link">添加备用链接</button>
+            </li>
+          </ol>
+          <button class="btn btn-link">添加集</button>
+          <div class="divider" data-content="测试可播放性"></div>
+          <video id="upload-v-test"></video>
+          <img id="upload-img-test">
+        </ul>
       </div>
     </div>
   </div>
@@ -348,6 +367,19 @@
       LoggedIn:false,
       Email:'',
       EmailURL:''
+    }
+  })
+  window.uploadPage=new Vue({
+    el:"#modal-upload",
+    data:{
+      Title:'',
+      Introduction:'',
+      ShortIntro:'',
+      Cover:'',
+      Clips:[
+        {Title:'',Links:['']}
+      ],
+      Owner:''
     }
   })
   window.modalInfo=new Vue({
