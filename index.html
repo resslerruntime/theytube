@@ -9,7 +9,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
   <script type="text/javascript">
-  		window.serverAddr='192.168.1.150:8090'
+  		window.serverAddr='localhost:8090'
   		function setCookie(cname,cvalue,exdays){
   		  var d = new Date();
   		  d.setTime(d.getTime()+(exdays*24*60*60*1000));
@@ -32,6 +32,43 @@
       function showInfo(str) {
         window.modalInfo.Info=str
         document.getElementById("modal-info").className='modal active'
+      }
+      function upload(me) {
+        var info=document.getElementById("upload-info")
+        var progress=document.getElementById("upload-progress")
+        var obj=new Object()
+        obj.Title=window.uploadPage.Title
+        obj.Introduction=window.uploadPage.Introduction
+        obj.Cover=window.uploadPage.Cover
+        obj.Clips=window.uploadPage.Clips
+        obj.State="upload"
+        obj.Info=getCookie("TheyTubeSessionID")
+        me.style.display = 'none'
+        progress.style.display = 'block'
+        var ws=new WebSocket("ws://"+window.serverAddr+"/wsUpload")
+        ws.onopen=function(evt) {
+          ws.send(JSON.stringify(obj))
+        }
+        ws.onmessage=function(evt) {
+          progress.style.display = 'none'
+          var gobj=JSON.parse(evt.data)
+          if (gobj.State=="OK") {
+            info.innerHTML='上传成功'
+            info.style.display = 'block'
+            setTimeout("location.href='index.html'", 1500)
+          }else if (gobj.Info=="ERR") {
+            info.innerHTML=gobj.Info
+            info.style.display = 'block'
+            me.style.display = 'block'
+          }
+          ws.close()
+        }
+        ws.onclose=function(evt) {
+          console.log('upload on close')
+        }
+        ws.onerror=function(evt) {
+          console.log('upload on err : '+evt.data)
+        }
       }
   		function login() {
         var result=document.getElementById("login-info")
@@ -136,7 +173,6 @@
         obj.Info=pageNum
         var ws=new WebSocket("ws://"+window.serverAddr+"/wsNew")
         ws.onopen=function(evt) {
-          console.log('new on open')
           ws.send(JSON.stringify(obj))
         }
         ws.onmessage=function(evt) {
@@ -203,6 +239,10 @@
     flex-wrap: nowrap;
     align-items: center;
   }
+  .card{
+    margin: 10px;
+    box-shadow: 3px 3px 3px #ddd;
+  }
 	</style>
 </head>
 <body style="padding: 0px;">
@@ -230,13 +270,13 @@
  home
 </div>
 <div id="newPage" class="tab-content">
-  <div v-for="video in videos" class="card">
+  <div v-for="(video,vindex) in videos" class="card">
     <div class="card-image">
       <img :src="video.Cover" class="img-responsive">
     </div>
     <div class="card-header">
       <div class="card-title h5">{{video.Title}}</div>
-      <div class="card-subtitle text-gray">{{video.ShortIntro}}</div>
+      <div class="card-subtitle text-gray">{{video.Introduction}}</div>
     </div>
   </div>
 </div>
@@ -349,9 +389,9 @@
             <input type="text" class="form-input" placeholder="总标题" v-model="Title">
             <input type="text" class="form-input" placeholder="介绍" v-model="Introduction">
             <div class="row-container"><div style="flex-grow: 1;"><input type="text" class="form-input" v-model="Cover" placeholder="封面链接"></div><a style="flex-grow: 0" onclick="testImg(window.uploadPage.Cover)">测试</a></div>
-          </div>
-          <div class="divider" data-content="分集"></div>
+          </div><br>
           <ol class="menu">
+            <div class="divider" data-content="分集"></div>
             <li class="menu-item" v-for="(clip,cindex) in Clips">
               <input type="text" class="form-input" placeholder="集标题" v-model="Clips[cindex].Title">
               <div v-for="(link,lindex) in clip.Links">
@@ -359,14 +399,17 @@
                   <input class="form-input" type="text" placeholder="视频链接" v-model="Clips[cindex].Links[lindex]">
                 </div><a style="flex-grow: 0" v-on:click="testVideo(Clips[cindex].Links[lindex])">测试</a></div>
               </div>
-              <button style="color: #555;" class="btn btn-link" v-on:click="Clips[cindex].Links.push('')">添加备用链接</button>
+              <button style="color: #555;" class="btn btn-link" v-on:click="Clips[cindex].Links.push('')"><small>添加备用链接</small></button>
             </li>
+            <button class="btn btn-link" style="color: #555;" onclick="window.uploadPage.Clips.push({Title:'',Links:['']})">添加集</button>
           </ol>
-          <button class="btn btn-link" style="color: #555;" onclick="window.uploadPage.Clips.push({Title:'',Links:['']})">添加集</button>
+          <br><br>
           <div class="divider" data-content="测试可播放性"></div>
           <video id="upload-v-test" autoplay controls></video>
-          <img id="upload-img-test">
-        </ul>
+          <img id="upload-img-test"><br>
+          <div class="loading" id="upload-progress" style="display: none;"></div>
+          <div id="upload-info" align="center" style="color: #000;display: none;"></div>
+          <button style="display: block;width: 100%;" class="btn" onclick="upload(this)">上传</button>
       </div>
     </div>
   </div>
@@ -391,12 +434,10 @@
     data:{
       Title:'',
       Introduction:'',
-      ShortIntro:'',
       Cover:'',
       Clips:[
         {Title:'',Links:['']}
       ],
-      Owner:'',
       testVideo:function(str) {
         document.getElementById("upload-v-test").src=str
       }

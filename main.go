@@ -40,6 +40,7 @@ func main() {
 	http.Handle("/wshome", websocket.Handler(wshome))
 	http.Handle("/wsLogin", websocket.Handler(wsLogin))
 	http.Handle("/wsNew", websocket.Handler(wsNew))
+	http.Handle("/wsUpload", websocket.Handler(wsUpload))
 	http.Handle("/wsRegister", websocket.Handler(wsRegister))
 	http.Handle("/wsGetVideo", websocket.Handler(wsGetVideo))
 	http.ListenAndServe(":8090", nil)
@@ -165,7 +166,7 @@ func wsUpload(ws *websocket.Conn) {
 	if testErr(e) {
 		return
 	}
-	_, e = findUser(bson.M{"sessionid": v.Info})
+	u, e := findUser(bson.M{"sessionid": v.Info})
 	if e != nil {
 		returnInfo(ws, "ERR", "您没有权限上传")
 		return
@@ -175,6 +176,7 @@ func wsUpload(ws *websocket.Conn) {
 	defer s.Close()
 	cv := s.DB("theytube").C("videos")
 	v.Vid = NewToken()
+	v.Owner = u.Email
 	e = cv.Insert(&v)
 	if testErr(e) {
 		returnInfo(ws, "ERR", "INSERT失败:"+e.Error())
