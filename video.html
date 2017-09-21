@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<link rel="stylesheet" href="css/spectre.min.css">
+	<link rel="stylesheet" href="css/spectre-icons.min.css">
+	<meta name="theme-color" content="#ddd">
+	<script src="js/vue.js"></script>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+	<script type="text/javascript">
+      function switchTab(target,str_id) {
+        var tabs=document.
+        target.className='tab-item active'
+        document.getElementById(str_id).style.display = 'block'
+      }
+	</script>
+</head>
+<body style="padding: 0px;margin: 0px;">
+<div id="main-container">
+
+<div style="display: flex;flex-direction: column;align-items: center;box-shadow: 2px 2px 2px #ddd;">
+  <div style="display: flex;width: 100%; justify-content: space-between;align-items: center;">
+    <span style="padding: 5px;color: #000;"><b>{{Title}}</b></span>
+    <i class="icon icon-apps" style="margin-right: 10px;color: #000;" onclick="location.href='/index.html"></i>
+  </div>
+  <div style="max-width: 700px;width: 100%;">
+    <ul class="tab tab-block" style="margin: 0px;">
+      <div v-for="(clip,cindex) in Clips">
+      	<li class="tab-item active" v-on:click="switchTab(cindex)"><a>{{clip.Title}}</a></li>
+      </div>
+    </ul>
+  </div>
+</div>
+
+</div>
+
+<script type="text/javascript">
+	var mainContainer=new Vue({
+		el:"#main-container",
+		data:{
+
+		}
+	})
+</script>
+</body>
+</html>

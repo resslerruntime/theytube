@@ -43,6 +43,27 @@
         obj.Clips=window.uploadPage.Clips
         obj.State="upload"
         obj.Info=getCookie("TheyTubeSessionID")
+        if (obj.Title==''||obj.Cover=='') {
+            info.innerHTML='信息未填写完整'
+            info.className='label-error'
+            info.style.display = 'block'
+            return
+        }
+        for (clip in obj.Clips){
+          if (clip.Title=='') {
+            info.innerHTML='信息未填写完整'
+            info.style.display = 'block'
+            return
+          }
+          for (link in clip.Links){
+            if (link=='') {
+              info.innerHTML='信息未填写完整'
+              info.style.display = 'block'
+              return
+            }
+          }
+        }
+        info.style.display = 'none'
         me.style.display = 'none'
         progress.style.display = 'block'
         var ws=new WebSocket("ws://"+window.serverAddr+"/wsUpload")
@@ -245,7 +266,7 @@
   }
 	</style>
 </head>
-<body style="padding: 0px;">
+<body style="padding: 0px;margin: 0px;">
 <div style="display: flex;flex-direction: column;align-items: center;box-shadow: 2px 2px 2px #ddd;">
   <div style="display: flex;width: 100%; justify-content: space-between;align-items: center;">
     <span style="padding: 5px;color: #000;"><b>TheyTube</b></span>
@@ -253,10 +274,10 @@
   </div>
   <div style="max-width: 700px;width: 100%;">
     <ul class="tab tab-block" style="margin: 0px;">
-      <li class="tab-item active" id="tab-home" onclick="switchTab(this,'homePage')">
-        <a>首页</a>
+      <li class="tab-item" id="tab-home" onclick="switchTab(this,'homePage')">
+        <a>精选</a>
       </li>
-      <li class="tab-item" id="tab-new" onclick="switchTab(this,'newPage')">
+      <li class="tab-item active" id="tab-new" onclick="switchTab(this,'newPage')">
         <a>新上传</a>
       </li>
       <li class="tab-item" id="tab-me" onclick="switchTab(this,'mePage')">
@@ -266,15 +287,15 @@
   </div>
 </div>
 <div style="display: flex;flex-direction: column;align-items: center;">
-<div id="homePage" class="tab-content" style="display: block;">
+<div id="homePage" class="tab-content">
  home
 </div>
-<div id="newPage" class="tab-content">
+<div id="newPage" class="tab-content" style="display: block;">
   <div v-for="(video,vindex) in videos" class="card">
-    <div class="card-image">
+    <div class="card-image" v-on:click="jmp(video.Vid)">
       <img :src="video.Cover" class="img-responsive">
     </div>
-    <div class="card-header">
+    <div class="card-header" v-on:click="jmp(video.Vid)">
       <div class="card-title h5">{{video.Title}}</div>
       <div class="card-subtitle text-gray">{{video.Introduction}}</div>
     </div>
@@ -286,7 +307,7 @@
       <li class="divider" data-content="账号"></li>
       <li class="menu-item"><a :href="EmailURL"><i class="icon icon-people"></i> {{Email}}</a></li>
       <li class="divider" data-content="视频"></li>
-      <li class="menu-item"><a onclick="document.getElementById('modal-upload').className='modal active'"><i class="icon icon-upward"></i>上传</a></li>
+      <li class="menu-item"><a onclick="document.getElementById('modal-upload').className='modal active'"><i class="icon icon-upload"></i>上传</a></li>
       <li class="divider"></li>
       <li class="menu-item">
         <a onclick="document.getElementById('modal-settings').className='modal active'"><i class="icon icon-menu" ></i> 设置</a>
@@ -386,29 +407,31 @@
       <div class="content">
           <div class="divider" data-content="基本信息"></div>
           <div>
-            <input type="text" class="form-input" placeholder="总标题" v-model="Title">
-            <input type="text" class="form-input" placeholder="介绍" v-model="Introduction">
-            <div class="row-container"><div style="flex-grow: 1;"><input type="text" class="form-input" v-model="Cover" placeholder="封面链接"></div><a style="flex-grow: 0" onclick="testImg(window.uploadPage.Cover)">测试</a></div>
+            <input type="text" class="form-input" placeholder="总标题" minlength="1" v-model="Title">
+            <input type="text" class="form-input" placeholder="介绍"  v-model="Introduction">
+            <div class="row-container"><div style="flex-grow: 1;"><input minlength="1" type="text" class="form-input" v-model="Cover" placeholder="封面链接"></div><a style="flex-grow: 0" onclick="testImg(window.uploadPage.Cover)">测试</a></div>
           </div><br>
           <ol class="menu">
             <div class="divider" data-content="分集"></div>
             <li class="menu-item" v-for="(clip,cindex) in Clips">
-              <input type="text" class="form-input" placeholder="集标题" v-model="Clips[cindex].Title">
+              <input type="text" class="form-input" minlength="1" placeholder="集标题" v-model="Clips[cindex].Title">
               <div v-for="(link,lindex) in clip.Links">
                 <div class="row-container"><div style="flex-grow: 1;">
-                  <input class="form-input" type="text" placeholder="视频链接" v-model="Clips[cindex].Links[lindex]">
+                  <input class="form-input" minlength="1" type="text" placeholder="视频链接" v-model="Clips[cindex].Links[lindex]">
                 </div><a style="flex-grow: 0" v-on:click="testVideo(Clips[cindex].Links[lindex])">测试</a></div>
               </div>
-              <button style="color: #555;" class="btn btn-link" v-on:click="Clips[cindex].Links.push('')"><small>添加备用链接</small></button>
+              <button style="color: #333;" class="btn btn-link" v-on:click="Clips[cindex].Links.push('')"><small>添加备用链接</small></button>
+              <button style="color: #333;" class="btn btn-link" v-on:click="Clips[cindex].Links.pop()" v-if="Clips[cindex].Links.length > 1"><small>删除链接</small></button>
             </li>
             <button class="btn btn-link" style="color: #555;" onclick="window.uploadPage.Clips.push({Title:'',Links:['']})">添加集</button>
+            <button class="btn btn-link" style="color: #555;" onclick="window.uploadPage.Clips.pop()" v-if="Clips.length > 1">删除集</button>
           </ol>
           <br><br>
           <div class="divider" data-content="测试可播放性"></div>
           <video id="upload-v-test" autoplay controls></video>
           <img id="upload-img-test"><br>
           <div class="loading" id="upload-progress" style="display: none;"></div>
-          <div id="upload-info" align="center" style="color: #000;display: none;"></div>
+          <div align="center" style="color: #000;" id="upload-info"></div>
           <button style="display: block;width: 100%;" class="btn" onclick="upload(this)">上传</button>
       </div>
     </div>
@@ -418,7 +441,10 @@
   window.newPage=new Vue({
     el:'#newPage',
     data:{
-      videos:[]
+      videos:[],
+      jmp:function(str) {
+        location.href='/video.html?vid='+str
+      }
     }
   })
   window.mePage=new Vue({
