@@ -37,12 +37,9 @@
           mc.Owner=gobj.Owner
           mc.Cover=gobj.Cover
           mc.Count=gobj.Count
-          mc.Clips[0]=gobj.Clips[0]
-          mc.Clips[0].isActive=true
-          for(var i=1;i<gobj.Clips.length;i++){
-            mc.Clips.push(gobj.Clips[i])
-            mc.Clips[i].isActive=false
-          }
+          mc.Clips=gobj.Clips
+          var tabs=document.getElementsByClassName("tab-item")
+          tabs[0].className="tab-item active"
         }else if (gobj.State=="ERR") {
           showInfo(gobj.Info)
         }
@@ -71,13 +68,12 @@
     <span style="padding: 5px;color: #000;"><b>{{Title}}</b></span>
     <a href="/index.html"><small style="margin-right: 10px;">TheyTube </small><i class="icon icon-apps" style="margin-right: 10px;color: #000;" onclick="location.href='/index.html"></i></a>
   </div>
-  <ul class="tab tab-block" style="margin: 0px;">
+  <ul class="tab tab-block" style="margin: 0px;" id="tabblock">
       <div v-for="(clip,cindex) in Clips">
-      	<li class="tab-item" v-bind:class="{active:clip.isActive}" v-on:click="switchTab(cindex)"><a>{{clip.Title}}</a></li>
+      	<li class="tab-item" v-on:click="switchTab(cindex)"><a>{{clip.Title}}</a></li>
       </div>
   </ul>
 </div>
-
 </div>
 <div class="modal" id="modal-info">
   <div class="modal-overlay"></div>
@@ -104,14 +100,15 @@
       Cover:'',
       Count:0,
       Clips:[
-        {Title:'loading',Links:[''],isActive:true}
+        {Title:'loading',Links:['']}
       ],
       switchTab:function(index) {
-        for (var i=0;i<window.mainContainer.Clips.length;i++) {
+        var tabs=document.getElementById("tabblock").children
+        for (var i=0;i<tabs.length;i++) {
           if (i==index) {
-            window.mainContainer.Clips[i].isActive=true
+            tabs[i].children[0].className="tab-item active"
           }else {
-            window.mainContainer.Clips[i].isActive=false
+            tabs[i].children[0].className="tab-item"
           }
         }
       }

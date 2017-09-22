@@ -428,8 +428,8 @@
           </ol>
           <br><br>
           <div class="divider" data-content="测试可播放性"></div>
-          <video id="upload-v-test" autoplay controls></video>
-          <img id="upload-img-test"><br>
+          <video id="upload-v-test" autoplay controls class="video-responsive"></video><br>
+          <img id="upload-img-test" style="width: 100%" class="img-responsive"><br>
           <div class="loading" id="upload-progress" style="display: none;"></div>
           <div align="center" style="color: #000;" id="upload-info"></div>
           <button style="display: block;width: 100%;" class="btn" onclick="upload(this)">上传</button>
@@ -475,8 +475,8 @@
       Info:''
     }
   })
-  setTimeout('doOnLoad()', 500)
-  setTimeout("getNewData('1',true)", 500)
+  setTimeout('doOnLoad()', 200)
+  setTimeout("getNewData('1',true)", 200)
 </script>
 </body>
 </html>
