@@ -9,12 +9,59 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 	<script type="text/javascript">
-      function switchTab(target,str_id) {
-        var tabs=document.
-        target.className='tab-item active'
-        document.getElementById(str_id).style.display = 'block'
+    window.serverAddr='localhost:8090'
+    function getVid() {
+      var i=location.href.indexOf("vid=")
+      var vid=location.href.substring(i+4, i+36)
+      return vid
+    }
+    function showInfo(str) {
+      window.modalInfo.Info=str
+      document.getElementById("modal-info").className='modal active'
+    }
+    function getVideoData() {
+      var obj=new Object()
+      obj.State="getVideo"
+      obj.Info=getVid()
+      var ws=new WebSocket("ws://"+window.serverAddr+"/wsGetVideo")
+      ws.onopen=function(evt) {
+        ws.send(JSON.stringify(obj))
       }
+      ws.onmessage=function (evt) {
+        console.log('on msg : '+evt.data)
+        var gobj=JSON.parse(evt.data)
+        if (gobj.State=="OK") {
+          var mc=window.mainContainer
+          mc.Title=gobj.Title
+          mc.Introduction=gobj.Introduction
+          mc.Owner=gobj.Owner
+          mc.Cover=gobj.Cover
+          mc.Count=gobj.Count
+          mc.Clips[0]=gobj.Clips[0]
+          mc.Clips[0].isActive=true
+          for(var i=1;i<gobj.Clips.length;i++){
+            mc.Clips.push(gobj.Clips[i])
+            mc.Clips[i].isActive=false
+          }
+        }else if (gobj.State=="ERR") {
+          showInfo(gobj.Info)
+        }
+        ws.close()
+      }
+      ws.onclose=function(evt) {
+        console.log('get video on close')
+      }
+      ws.onerror=function(evt) {
+        showInfo(evt.data)
+      }
+    }
 	</script>
+  <style type="text/css">
+    a{
+      text-decoration: none;
+      color: #000;
+    }
+  </style>
 </head>
 <body style="padding: 0px;margin: 0px;">
 <div id="main-container">
@@ -22,26 +69,61 @@
 <div style="display: flex;flex-direction: column;align-items: center;box-shadow: 2px 2px 2px #ddd;">
   <div style="display: flex;width: 100%; justify-content: space-between;align-items: center;">
     <span style="padding: 5px;color: #000;"><b>{{Title}}</b></span>
-    <i class="icon icon-apps" style="margin-right: 10px;color: #000;" onclick="location.href='/index.html"></i>
+    <a href="/index.html"><small style="margin-right: 10px;">TheyTube </small><i class="icon icon-apps" style="margin-right: 10px;color: #000;" onclick="location.href='/index.html"></i></a>
   </div>
-  <div style="max-width: 700px;width: 100%;">
-    <ul class="tab tab-block" style="margin: 0px;">
+  <ul class="tab tab-block" style="margin: 0px;">
       <div v-for="(clip,cindex) in Clips">
-      	<li class="tab-item active" v-on:click="switchTab(cindex)"><a>{{clip.Title}}</a></li>
+      	<li class="tab-item" v-bind:class="{active:clip.isActive}" v-on:click="switchTab(cindex)"><a>{{clip.Title}}</a></li>
       </div>
-    </ul>
+  </ul>
+</div>
+
+</div>
+<div class="modal" id="modal-info">
+  <div class="modal-overlay"></div>
+  <div class="modal-container">
+    <div class="modal-header">
+      <button class="btn btn-clear float-right" onclick="document.getElementById('modal-info').className='modal'"></button>
+      <div class="modal-title"><b>提示</b></div>
+    </div>
+    <div class="modal-body">
+      <div class="content">
+        {{Info}}
+      </div>
+    </div>
   </div>
 </div>
-
-</div>
-
 <script type="text/javascript">
-	var mainContainer=new Vue({
+	window.mainContainer=new Vue({
 		el:"#main-container",
 		data:{
-
+      Title:'Loading',
+      Introduction:'',
+      Vid:'',
+      Owner:'',
+      Cover:'',
+      Count:0,
+      Clips:[
+        {Title:'loading',Links:[''],isActive:true}
+      ],
+      switchTab:function(index) {
+        for (var i=0;i<window.mainContainer.Clips.length;i++) {
+          if (i==index) {
+            window.mainContainer.Clips[i].isActive=true
+          }else {
+            window.mainContainer.Clips[i].isActive=false
+          }
+        }
+      }
 		}
 	})
+  window.modalInfo=new Vue({
+    el:"#modal-info",
+    data:{
+      Info:''
+    }
+  })
+  setTimeout("getVideoData()", 200)
 </script>
 </body>
 </html>

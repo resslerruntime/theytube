@@ -203,7 +203,10 @@ func wsGetVideo(ws *websocket.Conn) {
 	}
 	v.State = "OK"
 	data, e := json.Marshal(v)
-	checkErr(e)
+	if testErr(e) {
+		returnInfo(ws, "ERR", e.Error())
+		return
+	}
 	ws.Write(data)
 }
 func checkErr(e error) {
@@ -218,7 +221,11 @@ func checkErr(e error) {
 func testErr(e error) bool {
 	if e != nil {
 		fmt.Println(e)
-		f, e := os.OpenFile("log.txt", os.O_APPEND|os.O_CREATE, 0666)
+		f, e1 := os.OpenFile("log.txt", os.O_APPEND|os.O_CREATE, 0666)
+		if e1 != nil {
+			fmt.Println("os.OpenFile failed : ", e1)
+			return true
+		}
 		f.Write([]byte(e.Error() + "\n"))
 		f.Close()
 		return true
@@ -262,8 +269,8 @@ func findVideo(m bson.M) (Video, error) {
 	s, e := mgo.Dial("127.0.0.1")
 	checkErr(e)
 	defer s.Close()
-	uv := s.DB("theytube").C("users")
+	cv := s.DB("theytube").C("videos")
 	v := Video{}
-	e = uv.Find(m).One(&v)
+	e = cv.Find(m).One(&v)
 	return v, e
 }
