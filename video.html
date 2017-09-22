@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title></title>
+	<title>TheyTube - Watch free videos online</title>
 	<link rel="stylesheet" href="css/spectre.min.css">
 	<link rel="stylesheet" href="css/spectre-icons.min.css">
 	<meta name="theme-color" content="#ddd">
@@ -40,6 +40,9 @@
           mc.Clips=gobj.Clips
           var tabs=document.getElementsByClassName("tab-item")
           tabs[0].className="tab-item active"
+          mc.CurClip=mc.Clips[0]
+          var firstLink=document.getElementById("linksPanel").children[0].children[0]
+          firstLink.disabled='disabled'
         }else if (gobj.State=="ERR") {
           showInfo(gobj.Info)
         }
@@ -57,6 +60,7 @@
     a{
       text-decoration: none;
       color: #000;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -64,9 +68,9 @@
 <div id="main-container">
 
 <div style="display: flex;flex-direction: column;align-items: center;box-shadow: 2px 2px 2px #ddd;">
-  <div style="display: flex;width: 100%; justify-content: space-between;align-items: center;">
-    <span style="padding: 5px;color: #000;"><b>{{Title}}</b></span>
-    <a href="/index.html"><small style="margin-right: 10px;">TheyTube </small><i class="icon icon-apps" style="margin-right: 10px;color: #000;" onclick="location.href='/index.html"></i></a>
+  <div style="display: flex;width: 100%;align-items: center;">
+    <span style="padding: 5px;color: #000;flex-grow: 1;"><center><big><b>{{Title}}</b></big></center></span>
+    <a href="/index.html" style="flex-grow: 0;"><small style="margin-right: 10px;">TheyTube </small><i class="icon icon-apps" style="margin-right: 10px;color: #000;" onclick="location.href='/index.html"></i></a>
   </div>
   <ul class="tab tab-block" style="margin: 0px;" id="tabblock">
       <div v-for="(clip,cindex) in Clips">
@@ -74,7 +78,19 @@
       </div>
   </ul>
 </div>
+<div align="center">
+<div id="content-div" style="max-width: 900px;width: 100%;overflow: hidden;" align="left">
+  <video class="video-responsive" :src="CurClip.Links[0]" controls autoplay id="mainVideoPlayer"></video>
+  <div class="divider" data-content="简介"></div>
+  <div style="margin: 10px;color: #000;">{{Introduction}}</div><br><br>
+  <div class="divider" data-content="备用链接" ></div>
+  <div id="linksPanel">
+    <div v-for="(link,lindex) in CurClip.Links"><button class="btn" v-on:click="changeLink(link,lindex)">{{link}}</button> <br><br></div>
+  </div>
 </div>
+</div>
+</div>
+
 <div class="modal" id="modal-info">
   <div class="modal-overlay"></div>
   <div class="modal-container">
@@ -111,7 +127,20 @@
             tabs[i].children[0].className="tab-item"
           }
         }
-      }
+        window.mainContainer.CurClip=window.mainContainer.Clips[index]
+      },
+      changeLink:function(link,cindex) {
+        var links=document.getElementById("linksPanel").children
+        for(var i=0;i<links.length;i++){
+          if (i==cindex) {
+            links[i].children[0].disabled='disabled'
+          }else{
+            links[i].children[0].disabled=''
+          }
+        }
+        document.getElementById("mainVideoPlayer").src=link
+      },
+      CurClip:{Title:'loading',Links:['link loading']}
 		}
 	})
   window.modalInfo=new Vue({
