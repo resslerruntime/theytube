@@ -132,17 +132,27 @@ func wsNew(ws *websocket.Conn) {
 		returnInfo(ws, "ERR", e.Error())
 		return
 	}
-	pageNum, e := strconv.ParseInt(bi.Info, 10, 64)
+	pageNum64, e := strconv.ParseInt(bi.Info, 10, 64)
 	if testErr(e) {
 		returnInfo(ws, "ERR", "String err")
 		return
 	}
+	pageNum := int(pageNum64)
 	s, e := mgo.Dial("127.0.0.1")
 	checkErr(e)
 	defer s.Close()
 	cv := s.DB("theytube").C("videos")
+	count, e := cv.Find(nil).Count()
+	if e != nil {
+		fmt.Println(e.Error())
+	}
+	var maxPage = getPages(count)
+	if pageNum < 1 || pageNum > maxPage {
+		returnInfo(ws, "ERR", "不存在的页面")
+		return
+	}
 	vs := []Video{}
-	e = cv.Find(nil).Limit(20).Sort("-uploadtime").Skip(int(pageNum-1) * 20).All(&vs)
+	e = cv.Find(nil).Limit(20).Sort("-uploadtime").Skip((pageNum - 1) * 20).All(&vs)
 	if testErr(e) {
 		returnInfo(ws, "ERR", e.Error())
 		return
@@ -151,7 +161,7 @@ func wsNew(ws *websocket.Conn) {
 		BaseInfo
 		Data []Video
 	}{
-		BaseInfo{"OK", ""},
+		BaseInfo{"OK", strconv.FormatInt(int64(maxPage), 10)},
 		vs,
 	}
 	data, e := json.Marshal(rdata)
@@ -172,34 +182,50 @@ func wsGetMyVideos(ws *websocket.Conn) {
 		returnInfo(ws, "ERR", e.Error())
 		return
 	}
-	pageNum, e := strconv.ParseInt(bi.Info, 10, 64)
+	pageNum64, e := strconv.ParseInt(bi.Info, 10, 64)
 	if testErr(e) {
 		returnInfo(ws, "ERR", "String err")
 		return
 	}
-	if pageNum < 1 {
-		pageNum = 1
-	}
+	pageNum := int(pageNum64)
 	s, e := mgo.Dial("127.0.0.1")
 	checkErr(e)
 	defer s.Close()
 	cv := s.DB("theytube").C("videos")
+	count, e := cv.Find(bson.M{"owner": bi.State}).Count()
+	if e != nil {
+		fmt.Println("count err ", e.Error())
+	}
+	var maxPage = getPages(count)
+	if pageNum < 1 || pageNum > maxPage {
+		returnInfo(ws, "ERR", "不存在的页面")
+		return
+	}
 	vs := []Video{}
 	e = cv.Find(bson.M{"owner": bi.State}).Limit(20).Sort("-uploadtime").Skip(int(pageNum-1) * 20).All(&vs)
 	if testErr(e) {
 		returnInfo(ws, "ERR", e.Error())
 		return
 	}
+
 	rdata := struct {
 		BaseInfo
 		Data []Video
 	}{
-		BaseInfo{"OK", ""},
+		BaseInfo{"OK", strconv.FormatInt(int64(maxPage), 10)},
 		vs,
 	}
 	data, e := json.Marshal(rdata)
 	checkErr(e)
 	ws.Write(data)
+}
+func getPages(sum int) int {
+	var pn = sum / 20
+	var y = sum % 20
+	if y == 0 {
+		return pn
+	}
+	return pn + 1
 }
 func wsUpload(ws *websocket.Conn) {
 	defer ws.Close()

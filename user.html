@@ -16,16 +16,12 @@
       return decodeURIComponent(vid)
     }
     function getData(pageNum) {
-        if (pageNum=="") {
-          pageNum="1"
-        }
         var obj=new Object()
         var str=getEmail()
         obj.State=str
         obj.Info=pageNum
         var ws=new WebSocket("ws://"+window.serverAddr+"/wsGetMyVideos")
         ws.onopen=function(evt) {
-          console.log('send '+JSON.stringify(obj))
           ws.send(JSON.stringify(obj))
         }
         ws.onmessage=function(evt) {
@@ -33,6 +29,18 @@
           if (gobj.State=="OK") {
           	window.mainContainer.Email=str+" 的主页"
             window.mainContainer.Videos=gobj.Data
+            window.mainContainer.CurPage=pageNum
+            var maxPage=new Number(gobj.Info)
+            if (window.mainContainer.CurPage<=1) {
+              document.getElementById("me-prevPage").disabled='disabled'
+            }else {
+              document.getElementById("me-prevPage").disabled=''
+            }
+            if (window.mainContainer.CurPage>=maxPage) {
+              document.getElementById("me-nextPage").disabled='disabled'
+            }else {
+              document.getElementById("me-nextPage").disabled=''
+            }
           }else{
             console.log('my err : '+gobj.Info)
           }
@@ -70,15 +78,20 @@
 </div>
 <div align="center">
 <div id="content-div" style="max-width: 900px;width: 100%;overflow: hidden;">
-  <div v-for="(video,vindex) in Videos" class="card">
-    <div class="card-image" v-on:click="jmp(video.Vid)">
-      <img :src="video.Cover" class="img-responsive">
-    </div>
-    <div class="card-header" v-on:click="jmp(video.Vid)">
-      <div class="card-title h5">{{video.Title}}</div>
-      <div class="card-subtitle text-gray">{{video.Introduction}}</div>
-    </div>
-  </div>
+	<div v-for="(video,vindex) in Videos" class="card">
+		<div class="card-image" v-on:click="jmp(video.Vid)">
+		  <img :src="video.Cover" class="img-responsive">
+		</div>
+		<div class="card-header" v-on:click="jmp(video.Vid)">
+		  <div class="card-title h5">{{video.Title}}</div>
+		  <div class="card-subtitle text-gray">{{video.Introduction}}</div>
+		</div>
+	</div>
+	<div style="display: flex;justify-content: space-between;margin: 20px;">
+	  <button id="me-prevPage" class="btn" disabled onclick="getData(window.mainContainer.CurPage-1)">上一页</button>
+	  <span>{{CurPage}}</span>
+	  <button id="me-nextPage" class="btn" onclick="getData(window.mainContainer.CurPage+1)">下一页</button>
+	</div>
 </div>
 </div>
 </div>
@@ -89,6 +102,7 @@
 		el:"#main-container",
 		data:{
 			Email:'loading',
+			CurPage:1,
 			Videos:[]
       	}
 	})

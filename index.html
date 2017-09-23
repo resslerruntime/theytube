@@ -246,12 +246,9 @@
         document.getElementById(str_id).style.display = 'block'
       }
       function getNewData(pageNum) {
-        if (pageNum=="") {
-          pageNum="1"
-        }
         var obj=new Object()
         obj.State="new"
-        obj.Info=pageNum
+        obj.Info=pageNum.toString()
         var ws=new WebSocket("ws://"+window.serverAddr+"/wsNew")
         ws.onopen=function(evt) {
           ws.send(JSON.stringify(obj))
@@ -260,6 +257,18 @@
           var gobj=JSON.parse(evt.data)
           if (gobj.State=="OK") {
             window.newPage.videos=gobj.Data
+            window.newPage.CurPage=pageNum
+            var maxPage=new Number(gobj.Info)
+            if (window.newPage.CurPage<=1) {
+              document.getElementById("new-prevPage").disabled='disabled'
+            }else {
+              document.getElementById("new-prevPage").disabled=''
+            }
+            if (window.newPage.CurPage>=maxPage) {
+              document.getElementById("new-nextPage").disabled='disabled'
+            }else {
+              document.getElementById("new-nextPage").disabled=''
+            }
           }else{
             console.log('new err : '+gobj.Info)
           }
@@ -273,12 +282,9 @@
         }
       }
       function getMyVideos(pageNum) {
-        if (pageNum=="") {
-          pageNum="1"
-        }
         var obj=new Object()
         obj.State=window.mePage.Email
-        obj.Info=pageNum
+        obj.Info=pageNum.toString()
         var ws=new WebSocket("ws://"+window.serverAddr+"/wsGetMyVideos")
         ws.onopen=function(evt) {
           ws.send(JSON.stringify(obj))
@@ -287,6 +293,18 @@
           var gobj=JSON.parse(evt.data)
           if (gobj.State=="OK") {
             window.mePage.Videos=gobj.Data
+            window.mePage.CurPage=pageNum
+            var maxPage=new Number(gobj.Info)            
+            if (window.mePage.CurPage<=1) {
+              document.getElementById("me-prevPage").disabled='disabled'
+            }else {
+              document.getElementById("me-prevPage").disabled=''
+            }
+            if (window.mePage.CurPage>=maxPage) {
+              document.getElementById("me-nextPage").disabled='disabled'
+            }else {
+              document.getElementById("me-nextPage").disabled=''
+            }
           }else{
             console.log('my err : '+gobj.Info)
           }
@@ -317,7 +335,7 @@
             window.mePage.LoggedIn=true
             window.mePage.Email=gobj.Info
             window.mePage.EmailURL='/user.html?email='+encodeURIComponent(gobj.Info)
-            setTimeout("getMyVideos('1')", 100)
+            setTimeout("getMyVideos(1)", 100)
           }else if (gobj.State=="ERR") {
             setCookie('TheyTubeSessionID','',0)
             showInfo(gobj.Info)
@@ -385,6 +403,11 @@
       <div class="card-subtitle text-gray">{{video.Introduction}}</div>
     </div>
   </div>
+  <div style="display: flex;justify-content: space-between;margin: 20px;">
+    <button id="new-prevPage" class="btn" disabled onclick="getNewData(window.newPage.CurPage-1)">上一页</button>
+    <span>{{CurPage}}</span>
+    <button id="new-nextPage" class="btn" onclick="getNewData(window.newPage.CurPage+1)">下一页</button>
+  </div>
 </div>
 <div id="mePage" class="tab-content">
   <div v-if="LoggedIn">
@@ -409,6 +432,11 @@
           <a v-on:click="deleteVideo(vindex)" style="margin-left: 20px;">删除</a>
         </div>
       </div>
+    </div>
+    <div style="display: flex;justify-content: space-between;margin: 20px;">
+      <button id="me-prevPage" class="btn" disabled onclick="getMyVideos(window.mePage.CurPage-1)">上一页</button>
+      <span>{{CurPage}}</span>
+      <button id="me-nextPage" class="btn" onclick="getMyVideos(window.mePage.CurPage+1)">下一页</button>
     </div>
   </div>
   <div v-else>
@@ -600,6 +628,7 @@
     el:'#newPage',
     data:{
       videos:[],
+      CurPage:1,
       jmp:function(str) {
         window.open('/video.html?vid='+str)
       }
@@ -612,6 +641,7 @@
       Email:'',
       EmailURL:'',
       Videos:[],
+      CurPage:1,
       jmp:function(str) {
         window.open('/video.html?vid='+str)
       },
