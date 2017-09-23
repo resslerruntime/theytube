@@ -254,11 +254,10 @@ func wsEditVideo(ws *websocket.Conn) {
 		returnInfo(ws, "ERR", "您没有权限修改")
 		return
 	}
-	gv.Title = v.Title
-	gv.Cover = v.Cover
-	gv.Introduction = v.Introduction
-	gv.Clips = v.Clips
-	e = insertVideo(gv)
+	s, e := mgo.Dial("127.0.0.1")
+	checkErr(e)
+	defer s.Close()
+	e = s.DB("theytube").C("videos").Update(bson.M{"vid": v.Vid}, bson.M{"$set": bson.M{"title": v.Title, "cover": v.Cover, "introduction": v.Introduction, "clips": v.Clips}})
 	if e != nil {
 		returnInfo(ws, "ERR", "修改失败:"+e.Error())
 		return

@@ -9,7 +9,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
   <script type="text/javascript">
-  		window.serverAddr='localhost:8090'
+  		window.serverAddr='192.168.1.150:8090'
   		function setCookie(cname,cvalue,exdays){
   		  var d = new Date();
   		  d.setTime(d.getTime()+(exdays*24*60*60*1000));
@@ -100,6 +100,7 @@
         obj.Cover=window.modalEdit.Cover
         obj.Clips=window.modalEdit.Clips
         obj.State="edit"
+        obj.Vid=window.modalEdit.Vid
         obj.Info=getCookie("TheyTubeSessionID")
         if (obj.Title==''||obj.Cover=='') {
             info.innerHTML='信息未填写完整'
@@ -130,11 +131,12 @@
         }
         ws.onmessage=function(evt) {
           progress.style.display = 'none'
+          console.log(evt.data)
           var gobj=JSON.parse(evt.data)
           if (gobj.State=="OK") {
             info.innerHTML='修改成功'
             info.style.display = 'block'
-            setTimeout("location.href='index.html'", 1000)
+            setTimeout("document.getElementById('modal-edit').className='modal'", 500)
           }else if (gobj.Info=="ERR") {
             info.innerHTML=gobj.Info
             info.style.display = 'block'
@@ -188,7 +190,7 @@
         }
         ws.onerror=function(evt){
         		console.log(evt.data)
-        		result.innerHTML="未联网"
+        		result.innerHTML="服务器不可用"
         }
   		}
   		function register() {
@@ -230,7 +232,7 @@
         }
         ws.onerror=function(evt){
             console.log(evt.data)
-            result.innerHTML="未联网"
+            result.innerHTML="服务器不可用"
         }
   		}
       function switchTab(target,str_id) {
@@ -314,7 +316,7 @@
           if (gobj.State=="OK") {
             window.mePage.LoggedIn=true
             window.mePage.Email=gobj.Info
-            window.mePage.EmailURL='/u?email='+encodeURIComponent(gobj.Info)
+            window.mePage.EmailURL='/user.html?email='+encodeURIComponent(gobj.Info)
             setTimeout("getMyVideos('1')", 100)
           }else if (gobj.State=="ERR") {
             setCookie('TheyTubeSessionID','',0)
@@ -323,7 +325,7 @@
           ws.close()
         }
         ws.onclose=function(evt) {console.log('home on close');}
-        ws.onerror=function(evt) {console.log('home on err:'+evt.data);}
+        ws.onerror=function(evt) {console.log('home on err:'+evt.data);showInfo("服务器不可用");}
   		}
   </script>
   <style>
@@ -398,9 +400,9 @@
     </ul><br>
     <div class="divider" data-content="我的视频"></div>
     <div v-for="(video,vindex) in Videos" style="display: flex;flex-direction: row;align-items: center;">
-      <img :src="video.Cover" width="160" height="90">
+      <img :src="video.Cover" width="160" height="90" v-on:click="jmp(video.Vid)">
       <div style="margin-left: 20px;">
-        <div>{{video.Title}}</div>
+        <div v-on:click="jmp(video.Vid)"><b>{{video.Title}}</b></div>
         <div style="display: flex;flex-direction: row;align-items: stretch;">
           <a v-on:click="jmp(video.Vid)">查看</a>
           <a v-on:click="showEdit(vindex)" style="margin-left: 20px;">修改</a>
@@ -619,6 +621,7 @@
         window.modalEdit.Introduction=v.Introduction
         window.modalEdit.Cover=v.Cover
         window.modalEdit.Clips=v.Clips
+        window.modalEdit.Vid=v.Vid
         document.getElementById('modal-edit').className='modal active'
       },
       deleteVideo:function(vindex) {
@@ -685,6 +688,7 @@
       Title:'',
       Introduction:'',
       Cover:'',
+      Vid:'',
       Clips:[
       {Title:'',Links:['']}
       ],

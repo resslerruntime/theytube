@@ -9,7 +9,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 	<script type="text/javascript">
-    window.serverAddr='localhost:8090'
+    window.serverAddr='192.168.1.150:8090'
     function getVid() {
       var i=location.href.indexOf("vid=")
       var vid=location.href.substring(i+4, i+36)
@@ -82,7 +82,7 @@
 <div id="content-div" style="max-width: 900px;width: 100%;overflow: hidden;" align="left">
   <video class="video-responsive" :src="CurClip.Links[0]" controls autoplay id="mainVideoPlayer"></video>
   <br>
-  <div>作者:<a v-on:click="jmpOwner()">{{Owner}}</a></div>
+  <div style="margin-left: 10px;">作者 : <a v-on:click="jmpOwner()">{{Owner}}</a></div>
   <div class="divider" data-content="简介"></div>
   <div style="margin: 10px;color: #000;">{{Introduction}}</div><br><br>
   <div class="divider" data-content="备用链接" ></div>
@@ -143,7 +143,7 @@
         document.getElementById("mainVideoPlayer").src=link
       },
       jmpOwner:function() {
-        location.href="/u?email="+encodeURIComponent(window.mainContainer.Owner)
+        location.href="/user.html?email="+encodeURIComponent(window.mainContainer.Owner)
       },
       CurClip:{Title:'loading',Links:['link loading']}
 		}
