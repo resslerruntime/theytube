@@ -255,7 +255,6 @@
           ws.send(JSON.stringify(obj))
         }
         ws.onmessage=function(evt) {
-          console.log('new msg:'+evt.data)
           var gobj=JSON.parse(evt.data)
           if (gobj.State=="OK") {
             window.newPage.videos=gobj.Data
@@ -283,7 +282,6 @@
           ws.send(JSON.stringify(obj))
         }
         ws.onmessage=function(evt) {
-          console.log('my msg:'+evt.data)
           var gobj=JSON.parse(evt.data)
           if (gobj.State=="OK") {
             window.mePage.Videos=gobj.Data
@@ -406,6 +404,7 @@
         <div style="display: flex;flex-direction: row;align-items: stretch;">
           <a v-on:click="jmp(video.Vid)">查看</a>
           <a v-on:click="showEdit(vindex)" style="margin-left: 20px;">修改</a>
+          <a v-on:click="deleteVideo(vindex)" style="margin-left: 20px;">删除</a>
         </div>
       </div>
     </div>
@@ -472,6 +471,26 @@
     <div class="modal-body">
       <div class="content">
         {{Info}}
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal" id="modal-confirm">
+  <div class="modal-overlay"></div>
+  <div class="modal-container">
+    <div class="modal-header">
+      <button class="btn btn-clear float-right" onclick="document.getElementById('modal-confirm').className='modal'"></button>
+      <div class="modal-title"><b>提示</b></div>
+    </div>
+    <div class="modal-body">
+      <div class="content">
+        {{Info}}
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="content">
+        <button class="btn" onclick="document.getElementById('modal-confirm').className='modal'">取消</button>
+        <button class="btn" v-on:click="onconfirmed()">确定</button>
       </div>
     </div>
   </div>
@@ -569,7 +588,7 @@
           <img id="edit-img-test" style="width: 100%" class="img-responsive"><br>
           <div class="loading" id="edit-progress" style="display: none;"></div>
           <div align="center" style="color: #000;" id="edit-info"></div>
-          <button style="display: block;width: 100%;" class="btn" onclick="edit(this)">上传</button>
+          <button style="display: block;width: 100%;" class="btn" onclick="edit(this)">修改</button>
       </div>
     </div>
   </div>
@@ -601,6 +620,33 @@
         window.modalEdit.Cover=v.Cover
         window.modalEdit.Clips=v.Clips
         document.getElementById('modal-edit').className='modal active'
+      },
+      deleteVideo:function(vindex) {
+        window.modalConfirm.Info="确认删除吗？"
+        window.modalConfirm.onconfirmed=function() {
+          document.getElementById('modal-confirm').className='modal'
+          var obj=new Object()
+          obj.State=window.mePage.Videos[vindex].Vid
+          obj.Info=getCookie("TheyTubeSessionID")
+          var ws=new WebSocket("ws://"+window.serverAddr+"/wsDeleteVideo")
+          ws.onopen=function(evt) {
+            ws.send(JSON.stringify(obj))
+          }
+          ws.onmessage=function(evt) {
+            var gobj=JSON.parse(evt.data)
+            if (gobj.State=="OK") {
+              window.mePage.Videos.splice(vindex, 1)
+              showInfo("删除成功")
+            }else if (gobj.State=="ERR") {
+              showInfo(gobj.Info)
+            }
+            ws.close()
+          }
+          ws.onerror=function(evt) {
+            console.log('deleteVideo on err :'+evt.data)
+          }
+        }
+        document.getElementById("modal-confirm").className='modal active'
       }
     }
   })
@@ -622,6 +668,15 @@
     el:"#modal-info",
     data:{
       Info:''
+    }
+  })
+  window.modalConfirm=new Vue({
+    el:"#modal-confirm",
+    data:{
+      Info:'',
+      onconfirmed:function() {
+        
+      }
     }
   })
   window.modalEdit=new Vue({

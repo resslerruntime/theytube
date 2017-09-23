@@ -45,6 +45,7 @@ func main() {
 	http.Handle("/wsEditVideo", websocket.Handler(wsEditVideo))
 	http.Handle("/wsRegister", websocket.Handler(wsRegister))
 	http.Handle("/wsGetVideo", websocket.Handler(wsGetVideo))
+	http.Handle("/wsDeleteVideo", websocket.Handler(wsDeleteVideo))
 	http.Handle("/wsGetMyVideos", websocket.Handler(wsGetMyVideos))
 	http.ListenAndServe(":8090", nil)
 }
@@ -258,6 +259,41 @@ func wsEditVideo(ws *websocket.Conn) {
 	gv.Introduction = v.Introduction
 	gv.Clips = v.Clips
 	e = insertVideo(gv)
+	if e != nil {
+		returnInfo(ws, "ERR", "修改失败:"+e.Error())
+		return
+	}
+	returnInfo(ws, "OK", "")
+}
+func wsDeleteVideo(ws *websocket.Conn) {
+	defer ws.Close()
+	b := make([]byte, 2048)
+	l, e := ws.Read(b)
+	if testErr(e) {
+		return
+	}
+	bi := BaseInfo{}
+	e = json.Unmarshal(b[:l], &bi)
+	if testErr(e) {
+		return
+	}
+	u, e := findUser(bson.M{"sessionid": bi.Info})
+	if e != nil {
+		returnInfo(ws, "ERR", "登录信息失效,请重新登陆")
+		return
+	}
+	gv, e := findVideo(bson.M{"vid": bi.State})
+	if e != nil {
+		returnInfo(ws, "ERR", "视频已被删除")
+		return
+	}
+	if gv.Owner != u.Email {
+		returnInfo(ws, "ERR", "您没有权限修改")
+		return
+	}
+	s, e := mgo.Dial("127.0.0.1")
+	checkErr(e)
+	e = s.DB("theytube").C("videos").Remove(bson.M{"vid": bi.State})
 	if e != nil {
 		returnInfo(ws, "ERR", "修改失败:"+e.Error())
 		return
