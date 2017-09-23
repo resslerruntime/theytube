@@ -390,7 +390,7 @@
   <div v-if="LoggedIn">
     <ul class="menu">
       <li class="divider" data-content="账号"></li>
-      <li class="menu-item"><a :href="EmailURL"><i class="icon icon-people"></i> {{Email}}</a></li>
+      <li class="menu-item"><a target="_blank" :href="EmailURL"><i class="icon icon-people"></i> {{Email}}</a></li>
       <li class="divider" data-content="视频"></li>
       <li class="menu-item"><a onclick="document.getElementById('modal-upload').className='modal active'"><i class="icon icon-upload"></i>上传</a></li>
       <li class="divider"></li>
@@ -601,7 +601,7 @@
     data:{
       videos:[],
       jmp:function(str) {
-        location.href='/video.html?vid='+str
+        window.open('/video.html?vid='+str)
       }
     }
   })
@@ -613,7 +613,7 @@
       EmailURL:'',
       Videos:[],
       jmp:function(str) {
-        location.href='/video.html?vid='+str
+        window.open('/video.html?vid='+str)
       },
       showEdit:function(vindex) {
         var v=window.mePage.Videos[vindex]
@@ -699,6 +699,7 @@
   })
   setTimeout('doOnLoad()', 200)
   setTimeout("getNewData('1')", 200)
+
 </script>
 </body>
 </html>
