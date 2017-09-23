@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>TheyTube - Watch free videos online</title>
+	<link rel="stylesheet" href="css/spectre.min.css">
+	<link rel="stylesheet" href="css/spectre-icons.min.css">
+	<meta name="theme-color" content="#ddd">
+	<script src="js/vue.js"></script>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+	<script type="text/javascript">
+    window.serverAddr='192.168.1.150:8090'
+    function getEmail() {
+      var i=location.href.indexOf("email=")
+      var vid=location.href.substring(i+6, location.href.length)
+      return decodeURIComponent(vid)
+    }
+    function getData(pageNum) {
+        if (pageNum=="") {
+          pageNum="1"
+        }
+        var obj=new Object()
+        var str=getEmail()
+        obj.State=str
+        obj.Info=pageNum
+        var ws=new WebSocket("ws://"+window.serverAddr+"/wsGetMyVideos")
+        ws.onopen=function(evt) {
+          console.log('send '+JSON.stringify(obj))
+          ws.send(JSON.stringify(obj))
+        }
+        ws.onmessage=function(evt) {
+          var gobj=JSON.parse(evt.data)
+          if (gobj.State=="OK") {
+          	window.mainContainer.Email=str+" 的主页"
+            window.mainContainer.Videos=gobj.Data
+          }else{
+            console.log('my err : '+gobj.Info)
+          }
+          ws.close()
+        }
+        ws.onclose=function(evt) {
+          console.log('my on close')
+        }
+        ws.onerror=function(evt) {
+          console.log('my on err : '+evt.data)
+          window.mainContainer.Email="服务器不可用"
+        }
+    }
+	</script>
+  <style type="text/css">
+    a{
+      text-decoration: none;
+      color: #000;
+      cursor: pointer;
+    }
+    .card{
+    	margin: 10px;
+    	box-shadow: 3px 3px 3px #ddd;
+  	}
+  </style>
+</head>
+<body style="padding: 0px;margin: 0px;">
+<div id="main-container">
+
+<div style="display: flex;flex-direction: column;align-items: center;box-shadow: 2px 2px 2px #ddd;">
+  <div style="display: flex;width: 100%;align-items: center;">
+    <span style="padding: 5px;color: #000;flex-grow: 1;"><center><big><b>{{Email}}</b></big></center></span>
+    <a target="_blank" href="/index.html" style="flex-grow: 0;"><small style="margin-right: 10px;">TheyTube </small><i class="icon icon-apps" style="margin-right: 10px;color: #000;" onclick="window.open('/index.html')"></i></a>
+  </div>
+</div>
+<div align="center">
+<div id="content-div" style="max-width: 900px;width: 100%;overflow: hidden;">
+  <div v-for="(video,vindex) in Videos" class="card">
+    <div class="card-image" v-on:click="jmp(video.Vid)">
+      <img :src="video.Cover" class="img-responsive">
+    </div>
+    <div class="card-header" v-on:click="jmp(video.Vid)">
+      <div class="card-title h5">{{video.Title}}</div>
+      <div class="card-subtitle text-gray">{{video.Introduction}}</div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+
+<script type="text/javascript">
+	window.mainContainer=new Vue({
+		el:"#main-container",
+		data:{
+			Email:'loading',
+			Videos:[]
+      	}
+	})
+  	setTimeout("getData('1')", 50)
+</script>
+</body>
+</html>
