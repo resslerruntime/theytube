@@ -76,7 +76,7 @@
           if (gobj.State=="OK") {
             info.innerHTML='上传成功'
             info.style.display = 'block'
-            setTimeout("location.href='index.html'", 1500)
+            setTimeout("location.href='index.html'", 1000)
           }else if (gobj.Info=="ERR") {
             info.innerHTML=gobj.Info
             info.style.display = 'block'
@@ -89,6 +89,64 @@
         }
         ws.onerror=function(evt) {
           console.log('upload on err : '+evt.data)
+        }
+      }
+      function edit(me) {
+        var info=document.getElementById("edit-info")
+        var progress=document.getElementById("edit-progress")
+        var obj=new Object()
+        obj.Title=window.modalEdit.Title
+        obj.Introduction=window.modalEdit.Introduction
+        obj.Cover=window.modalEdit.Cover
+        obj.Clips=window.modalEdit.Clips
+        obj.State="edit"
+        obj.Info=getCookie("TheyTubeSessionID")
+        if (obj.Title==''||obj.Cover=='') {
+            info.innerHTML='信息未填写完整'
+            info.className='label-error'
+            info.style.display = 'block'
+            return
+        }
+        for (clip in obj.Clips){
+          if (clip.Title=='') {
+            info.innerHTML='信息未填写完整'
+            info.style.display = 'block'
+            return
+          }
+          for (link in clip.Links){
+            if (link=='') {
+              info.innerHTML='信息未填写完整'
+              info.style.display = 'block'
+              return
+            }
+          }
+        }
+        info.style.display = 'none'
+        me.style.display = 'none'
+        progress.style.display = 'block'
+        var ws=new WebSocket("ws://"+window.serverAddr+"/wsEditVideo")
+        ws.onopen=function(evt) {
+          ws.send(JSON.stringify(obj))
+        }
+        ws.onmessage=function(evt) {
+          progress.style.display = 'none'
+          var gobj=JSON.parse(evt.data)
+          if (gobj.State=="OK") {
+            info.innerHTML='修改成功'
+            info.style.display = 'block'
+            setTimeout("location.href='index.html'", 1000)
+          }else if (gobj.Info=="ERR") {
+            info.innerHTML=gobj.Info
+            info.style.display = 'block'
+            me.style.display = 'block'
+          }
+          ws.close()
+        }
+        ws.onclose=function(evt) {
+          console.log('edit on close')
+        }
+        ws.onerror=function(evt) {
+          console.log('edit on err : '+evt.data)
         }
       }
   		function login() {
@@ -185,7 +243,7 @@
         document.getElementById("mePage").style.display = 'none'
         document.getElementById(str_id).style.display = 'block'
       }
-      function getNewData(pageNum,refresh) {
+      function getNewData(pageNum) {
         if (pageNum=="") {
           pageNum="1"
         }
@@ -200,9 +258,7 @@
           console.log('new msg:'+evt.data)
           var gobj=JSON.parse(evt.data)
           if (gobj.State=="OK") {
-            if (refresh) {
-              window.newPage.videos=gobj.Data
-            }
+            window.newPage.videos=gobj.Data
           }else{
             console.log('new err : '+gobj.Info)
           }
@@ -213,6 +269,34 @@
         }
         ws.onerror=function(evt) {
           console.log('new on err : '+evt.data)
+        }
+      }
+      function getMyVideos(pageNum) {
+        if (pageNum=="") {
+          pageNum="1"
+        }
+        var obj=new Object()
+        obj.State=window.mePage.Email
+        obj.Info=pageNum
+        var ws=new WebSocket("ws://"+window.serverAddr+"/wsGetMyVideos")
+        ws.onopen=function(evt) {
+          ws.send(JSON.stringify(obj))
+        }
+        ws.onmessage=function(evt) {
+          console.log('my msg:'+evt.data)
+          var gobj=JSON.parse(evt.data)
+          if (gobj.State=="OK") {
+            window.mePage.Videos=gobj.Data
+          }else{
+            console.log('my err : '+gobj.Info)
+          }
+          ws.close()
+        }
+        ws.onclose=function(evt) {
+          console.log('my on close')
+        }
+        ws.onerror=function(evt) {
+          console.log('my on err : '+evt.data)
         }
       }
   		function doOnLoad() {
@@ -233,6 +317,7 @@
             window.mePage.LoggedIn=true
             window.mePage.Email=gobj.Info
             window.mePage.EmailURL='/u?email='+encodeURIComponent(gobj.Info)
+            setTimeout("getMyVideos('1')", 100)
           }else if (gobj.State=="ERR") {
             setCookie('TheyTubeSessionID','',0)
             showInfo(gobj.Info)
@@ -312,7 +397,18 @@
       <li class="menu-item">
         <a onclick="document.getElementById('modal-settings').className='modal active'"><i class="icon icon-menu" ></i> 设置</a>
       </li>
-    </ul>
+    </ul><br>
+    <div class="divider" data-content="我的视频"></div>
+    <div v-for="(video,vindex) in Videos" style="display: flex;flex-direction: row;align-items: center;">
+      <img :src="video.Cover" width="160" height="90">
+      <div style="margin-left: 20px;">
+        <div>{{video.Title}}</div>
+        <div style="display: flex;flex-direction: row;align-items: stretch;">
+          <a v-on:click="jmp(video.Vid)">查看</a>
+          <a v-on:click="showEdit(vindex)" style="margin-left: 20px;">修改</a>
+        </div>
+      </div>
+    </div>
   </div>
   <div v-else>
     <ul class="menu">
@@ -437,6 +533,47 @@
     </div>
   </div>
 </div>
+<div class="modal" id="modal-edit">
+  <div class="modal-overlay"></div>
+  <div class="modal-container">
+    <div class="modal-header">
+      <button class="btn btn-clear float-right" onclick="document.getElementById('modal-edit').className='modal'"></button>
+      <div class="modal-title"><b>修改</b></div>
+    </div>
+    <div class="modal-body">
+      <div class="content">
+          <div class="divider" data-content="基本信息"></div>
+          <div>
+            <input type="text" class="form-input" placeholder="总标题" minlength="1" v-model="Title">
+            <input type="text" class="form-input" placeholder="介绍"  v-model="Introduction">
+            <div class="row-container"><div style="flex-grow: 1;"><input minlength="1" type="text" class="form-input" v-model="Cover" placeholder="封面链接"></div><a style="flex-grow: 0" onclick="document.getElementById('edit-img-test').src=window.modalEdit.Cover">测试</a></div>
+          </div><br>
+          <ol class="menu">
+            <div class="divider" data-content="分集"></div>
+            <li class="menu-item" v-for="(clip,cindex) in Clips">
+              <input type="text" class="form-input" minlength="1" placeholder="集标题" v-model="Clips[cindex].Title">
+              <div v-for="(link,lindex) in clip.Links">
+                <div class="row-container"><div style="flex-grow: 1;">
+                  <input class="form-input" minlength="1" type="text" placeholder="视频链接" v-model="Clips[cindex].Links[lindex]">
+                </div><a style="flex-grow: 0" v-on:click="testVideo(Clips[cindex].Links[lindex])">测试</a></div>
+              </div>
+              <button style="color: #333;" class="btn btn-link" v-on:click="Clips[cindex].Links.push('')"><small>添加备用链接</small></button>
+              <button style="color: #333;" class="btn btn-link" v-on:click="Clips[cindex].Links.pop()" v-if="Clips[cindex].Links.length > 1"><small>删除链接</small></button>
+            </li>
+            <button class="btn btn-link" style="color: #555;" onclick="window.modalEdit.Clips.push({Title:'',Links:['']})">添加集</button>
+            <button class="btn btn-link" style="color: #555;" onclick="window.modalEdit.Clips.pop()" v-if="Clips.length > 1">删除集</button>
+          </ol>
+          <br><br>
+          <div class="divider" data-content="测试可播放性"></div>
+          <video id="edit-v-test" autoplay controls class="video-responsive"></video><br>
+          <img id="edit-img-test" style="width: 100%" class="img-responsive"><br>
+          <div class="loading" id="edit-progress" style="display: none;"></div>
+          <div align="center" style="color: #000;" id="edit-info"></div>
+          <button style="display: block;width: 100%;" class="btn" onclick="edit(this)">上传</button>
+      </div>
+    </div>
+  </div>
+</div>
 <script type="text/javascript">
   window.newPage=new Vue({
     el:'#newPage',
@@ -452,7 +589,19 @@
     data:{
       LoggedIn:false,
       Email:'',
-      EmailURL:''
+      EmailURL:'',
+      Videos:[],
+      jmp:function(str) {
+        location.href='/video.html?vid='+str
+      },
+      showEdit:function(vindex) {
+        var v=window.mePage.Videos[vindex]
+        window.modalEdit.Title=v.Title
+        window.modalEdit.Introduction=v.Introduction
+        window.modalEdit.Cover=v.Cover
+        window.modalEdit.Clips=v.Clips
+        document.getElementById('modal-edit').className='modal active'
+      }
     }
   })
   window.uploadPage=new Vue({
@@ -475,8 +624,22 @@
       Info:''
     }
   })
+  window.modalEdit=new Vue({
+    el:"#modal-edit",
+    data:{
+      Title:'',
+      Introduction:'',
+      Cover:'',
+      Clips:[
+      {Title:'',Links:['']}
+      ],
+      testVideo:function(str) {
+        document.getElementById("edit-v-test").src=str
+      }
+    }
+  })
   setTimeout('doOnLoad()', 200)
-  setTimeout("getNewData('1',true)", 200)
+  setTimeout("getNewData('1')", 200)
 </script>
 </body>
 </html>

@@ -23,6 +23,7 @@ type Video struct {
 	Owner               string
 	Cover               string
 	Count               int
+	UploadTime          time.Time
 }
 type Clip struct {
 	Title string
@@ -41,8 +42,10 @@ func main() {
 	http.Handle("/wsLogin", websocket.Handler(wsLogin))
 	http.Handle("/wsNew", websocket.Handler(wsNew))
 	http.Handle("/wsUpload", websocket.Handler(wsUpload))
+	http.Handle("/wsEditVideo", websocket.Handler(wsEditVideo))
 	http.Handle("/wsRegister", websocket.Handler(wsRegister))
 	http.Handle("/wsGetVideo", websocket.Handler(wsGetVideo))
+	http.Handle("/wsGetMyVideos", websocket.Handler(wsGetMyVideos))
 	http.ListenAndServe(":8090", nil)
 }
 func wshome(ws *websocket.Conn) {
@@ -59,7 +62,7 @@ func wshome(ws *websocket.Conn) {
 	}
 	gu, e := findUser(bson.M{"sessionid": bi.Info})
 	if e != nil {
-		returnInfo(ws, "ERR", "登录信息失效")
+		returnInfo(ws, "ERR", "登录信息失效,请重新登陆")
 		return
 	}
 	returnInfo(ws, "OK", gu.Email)
@@ -138,7 +141,50 @@ func wsNew(ws *websocket.Conn) {
 	defer s.Close()
 	cv := s.DB("theytube").C("videos")
 	vs := []Video{}
-	e = cv.Find(nil).Limit(20).Skip(int(pageNum-1) * 20).All(&vs)
+	e = cv.Find(nil).Limit(20).Sort("-uploadtime").Skip(int(pageNum-1) * 20).All(&vs)
+	if testErr(e) {
+		returnInfo(ws, "ERR", e.Error())
+		return
+	}
+	rdata := struct {
+		BaseInfo
+		Data []Video
+	}{
+		BaseInfo{"OK", ""},
+		vs,
+	}
+	data, e := json.Marshal(rdata)
+	checkErr(e)
+	ws.Write(data)
+}
+func wsGetMyVideos(ws *websocket.Conn) {
+	defer ws.Close()
+	b := make([]byte, 1024)
+	l, e := ws.Read(b)
+	if testErr(e) {
+		returnInfo(ws, "ERR", e.Error())
+		return
+	}
+	bi := BaseInfo{}
+	e = json.Unmarshal(b[:l], &bi)
+	if testErr(e) {
+		returnInfo(ws, "ERR", e.Error())
+		return
+	}
+	pageNum, e := strconv.ParseInt(bi.Info, 10, 64)
+	if testErr(e) {
+		returnInfo(ws, "ERR", "String err")
+		return
+	}
+	if pageNum < 1 {
+		pageNum = 1
+	}
+	s, e := mgo.Dial("127.0.0.1")
+	checkErr(e)
+	defer s.Close()
+	cv := s.DB("theytube").C("videos")
+	vs := []Video{}
+	e = cv.Find(bson.M{"owner": bi.State}).Limit(20).Sort("-uploadtime").Skip(int(pageNum-1) * 20).All(&vs)
 	if testErr(e) {
 		returnInfo(ws, "ERR", e.Error())
 		return
@@ -171,18 +217,52 @@ func wsUpload(ws *websocket.Conn) {
 		returnInfo(ws, "ERR", "您没有权限上传")
 		return
 	}
-	s, e := mgo.Dial("127.0.0.1")
-	checkErr(e)
-	defer s.Close()
-	cv := s.DB("theytube").C("videos")
 	v.Vid = NewToken()
 	v.Owner = u.Email
-	e = cv.Insert(&v)
+	v.UploadTime = time.Now()
+	e = insertVideo(v)
 	if testErr(e) {
-		returnInfo(ws, "ERR", "INSERT失败:"+e.Error())
+		returnInfo(ws, "ERR", "上传失败:"+e.Error())
 		return
 	}
 	returnInfo(ws, "OK", v.Vid)
+}
+func wsEditVideo(ws *websocket.Conn) {
+	defer ws.Close()
+	b := make([]byte, 2048)
+	l, e := ws.Read(b)
+	if testErr(e) {
+		return
+	}
+	v := Video{}
+	e = json.Unmarshal(b[:l], &v)
+	if testErr(e) {
+		return
+	}
+	u, e := findUser(bson.M{"sessionid": v.Info})
+	if e != nil {
+		returnInfo(ws, "ERR", "登录信息失效,请重新登陆")
+		return
+	}
+	gv, e := findVideo(bson.M{"vid": v.Vid})
+	if e != nil {
+		returnInfo(ws, "ERR", "视频已被删除")
+		return
+	}
+	if gv.Owner != u.Email {
+		returnInfo(ws, "ERR", "您没有权限修改")
+		return
+	}
+	gv.Title = v.Title
+	gv.Cover = v.Cover
+	gv.Introduction = v.Introduction
+	gv.Clips = v.Clips
+	e = insertVideo(gv)
+	if e != nil {
+		returnInfo(ws, "ERR", "修改失败:"+e.Error())
+		return
+	}
+	returnInfo(ws, "OK", "")
 }
 func wsGetVideo(ws *websocket.Conn) {
 	defer ws.Close()
@@ -250,7 +330,7 @@ func findUser(m bson.M) (User, error) {
 	e = uc.Find(m).One(&u)
 	return u, e
 }
-func insertUser(u interface{}) error {
+func insertUser(u User) error {
 	s, e := mgo.Dial("127.0.0.1")
 	checkErr(e)
 	defer s.Close()
@@ -273,4 +353,12 @@ func findVideo(m bson.M) (Video, error) {
 	v := Video{}
 	e = cv.Find(m).One(&v)
 	return v, e
+}
+func insertVideo(v Video) error {
+	s, e := mgo.Dial("127.0.0.1")
+	checkErr(e)
+	defer s.Close()
+	uv := s.DB("theytube").C("videos")
+	e = uv.Insert(&v)
+	return e
 }

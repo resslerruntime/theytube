@@ -81,6 +81,8 @@
 <div align="center">
 <div id="content-div" style="max-width: 900px;width: 100%;overflow: hidden;" align="left">
   <video class="video-responsive" :src="CurClip.Links[0]" controls autoplay id="mainVideoPlayer"></video>
+  <br>
+  <div>作者:<a v-on:click="jmpOwner()">{{Owner}}</a></div>
   <div class="divider" data-content="简介"></div>
   <div style="margin: 10px;color: #000;">{{Introduction}}</div><br><br>
   <div class="divider" data-content="备用链接" ></div>
@@ -139,6 +141,9 @@
           }
         }
         document.getElementById("mainVideoPlayer").src=link
+      },
+      jmpOwner:function() {
+        location.href="/u?email="+encodeURIComponent(window.mainContainer.Owner)
       },
       CurClip:{Title:'loading',Links:['link loading']}
 		}
