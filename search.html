@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>TheyTube - Watch free videos online</title>
+	<link rel="stylesheet" href="css/spectre.min.css">
+	<link rel="stylesheet" href="css/spectre-icons.min.css">
+	<meta name="theme-color" content="#ddd">
+	<script src="js/vue.js"></script>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+	<script type="text/javascript">
+    window.serverAddr='192.168.1.150:8090'
+    function getQuery() {
+      var i=location.href.indexOf("q=")
+      var vid=location.href.substring(i+2, location.href.length)
+      return decodeURIComponent(vid)
+    }
+    function showInfo(str) {
+      window.modalInfo.Info=str
+      document.getElementById("modal-info").className='modal active'
+    }
+    function mSearch() {
+      var q=document.getElementById('search-input').value;
+      if(q!=''){
+        location.href='/search.html?q='+encodeURIComponent(q)
+      }
+    }
+    function getVideos(pageNum) {
+      var input=document.getElementById("search-input")
+      input.onkeyup=function(e) {
+        if (e.keyCode==13) {
+          mSearch()
+        }
+      }
+      var query=getQuery()
+      input.value=query
+      var obj=new Object()
+      obj.State=pageNum.toString()
+      obj.Info=query
+      var ws=new WebSocket("ws://"+window.serverAddr+"/wsSearch")
+      ws.onopen=function(evt) {
+        ws.send(JSON.stringify(obj))
+      }
+      ws.onmessage=function(evt) {
+        var gobj=JSON.parse(evt.data)
+        if (gobj.State=="OK"&&gobj.Info!="0个搜索结果") {
+          window.scontainer.Videos=gobj.Data
+          window.scontainer.CurPage=pageNum
+          var maxPage=new Number(gobj.Info)            
+          if (window.scontainer.CurPage<=1) {
+            document.getElementById("me-prevPage").disabled='disabled'
+          }else {
+            document.getElementById("me-prevPage").disabled=''
+          }
+          if (window.scontainer.CurPage>=maxPage) {
+            document.getElementById("me-nextPage").disabled='disabled'
+          }else {
+            document.getElementById("me-nextPage").disabled=''
+          }
+          ws.close()
+          document.getElementById("loading").className = ''
+          return
+        }
+        console.log('my err : '+gobj.Info)
+        document.getElementById("loading").className = ''
+        document.getElementById("loading").innerHTML = gobj.Info
+        ws.close()
+      }
+      ws.onclose=function(evt) {
+        console.log('my on close')
+      }
+      ws.onerror=function(evt) {
+        console.log('my on err : '+evt.data)
+      }
+    }
+	</script>
+  <style type="text/css">
+    a{
+      text-decoration: none;
+      color: #000;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body style="padding: 0px;margin: 0px;">
+<div id="scontainer">
+<div style="display: flex;flex-direction: column;align-items: center;box-shadow: 2px 2px 2px #ddd;">
+  <div style="display: flex;width: 100%;align-items: center;">
+    <i class="icon icon-apps" style="margin-left: 10px;color: #000;" onclick="location.href='/index.html'"></i>
+    <span style="padding: 5px;color: #000;flex-grow: 1;"><input class="form-input" type="text" id="search-input"></span>
+    <i class="icon icon-search" style="margin-right: 10px;color: #000;" onclick="mSearch()"></i>
+  </div>
+</div>
+<div align="center">
+<div id="content-div" style="max-width: 900px;width: 100%;overflow: hidden;">
+  <div v-for="(video,vindex) in Videos">
+    <div v-on:click="jmp(video.Vid)"  style="display: flex;flex-direction: row;align-items: center;">
+      <img :src="video.Cover" width="160" height="90">
+      <div style="margin-left: 20px;">
+        <div ><b>{{video.Title}}</b></div>
+        <div style="overflow: hidden;">{{video.Introduction}}</div>
+      </div>
+    </div>
+  </div><br>
+  <div class="loading" id="loading"></div>
+  <div style="display: flex;justify-content: space-between;margin: 20px;">
+    <button id="me-prevPage" class="btn" disabled onclick="getData(window.mainContainer.CurPage-1)">上一页</button>
+    <span>{{CurPage}}</span>
+    <button id="me-nextPage" class="btn" disabled onclick="getData(window.mainContainer.CurPage+1)">下一页</button>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="modal" id="modal-info">
+  <div class="modal-overlay"></div>
+  <div class="modal-container">
+    <div class="modal-header">
+      <button class="btn btn-clear float-right" onclick="document.getElementById('modal-info').className='modal'"></button>
+      <div class="modal-title"><b>提示</b></div>
+    </div>
+    <div class="modal-body">
+      <div class="content">
+        {{Info}}
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+  window.scontainer=new Vue({
+    el:"#scontainer",
+    data:{
+      CurPage:1,
+      Videos:[],
+      jmp:function(str) {
+        window.open('/video.html?vid='+str)
+      }
+    }
+  })
+  window.modalInfo=new Vue({
+    el:"#modal-info",
+    data:{
+      Info:''
+    }
+  })
+  setTimeout("getVideos(1)", 50)
+</script>
+</body>
+</html>

@@ -78,15 +78,17 @@
 </div>
 <div align="center">
 <div id="content-div" style="max-width: 900px;width: 100%;overflow: hidden;">
-	<div v-for="(video,vindex) in Videos" class="card">
-		<div class="card-image" v-on:click="jmp(video.Vid)">
-		  <img :src="video.Cover" class="img-responsive">
-		</div>
-		<div class="card-header" v-on:click="jmp(video.Vid)">
-		  <div class="card-title h5">{{video.Title}}</div>
-		  <div class="card-subtitle text-gray">{{video.Introduction}}</div>
-		</div>
-	</div>
+	<div v-for="(video,vindex) in Videos" style="display: flex;flex-direction: row;align-items: center;">
+      <img :src="video.Cover" width="160" height="90" v-on:click="jmp(video.Vid)">
+      <div style="margin-left: 20px;">
+        <div v-on:click="jmp(video.Vid)"><b>{{video.Title}}</b></div>
+        <div style="display: flex;flex-direction: row;align-items: stretch;">
+          <a v-on:click="jmp(video.Vid)">查看</a>
+          <a v-on:click="showEdit(vindex)" style="margin-left: 20px;">修改</a>
+          <a v-on:click="deleteVideo(vindex)" style="margin-left: 20px;">删除</a>
+        </div>
+      </div>
+    </div>
 	<div style="display: flex;justify-content: space-between;margin: 20px;">
 	  <button id="me-prevPage" class="btn" disabled onclick="getData(window.mainContainer.CurPage-1)">上一页</button>
 	  <span>{{CurPage}}</span>

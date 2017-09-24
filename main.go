@@ -2,6 +2,7 @@ package main
 
 import (
 	// "bufio"
+	"bytes"
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"time"
 )
@@ -20,6 +22,7 @@ type Video struct {
 	Clips               []Clip
 	Vid                 string
 	Title, Introduction string
+	Tags                string
 	Owner               string
 	Cover               string
 	Count               int
@@ -47,6 +50,7 @@ func main() {
 	http.Handle("/wsGetVideo", websocket.Handler(wsGetVideo))
 	http.Handle("/wsDeleteVideo", websocket.Handler(wsDeleteVideo))
 	http.Handle("/wsGetMyVideos", websocket.Handler(wsGetMyVideos))
+	http.Handle("/wsSearch", websocket.Handler(wsSearch))
 	http.ListenAndServe(":8090", nil)
 }
 func wshome(ws *websocket.Conn) {
@@ -202,7 +206,7 @@ func wsGetMyVideos(ws *websocket.Conn) {
 		return
 	}
 	vs := []Video{}
-	e = cv.Find(bson.M{"owner": bi.State}).Limit(20).Sort("-uploadtime").Skip(int(pageNum-1) * 20).All(&vs)
+	e = cv.Find(bson.M{"owner": bi.State}).Limit(20).Sort("-uploadtime").Skip((pageNum - 1) * 20).All(&vs)
 	if testErr(e) {
 		returnInfo(ws, "ERR", e.Error())
 		return
@@ -219,14 +223,7 @@ func wsGetMyVideos(ws *websocket.Conn) {
 	checkErr(e)
 	ws.Write(data)
 }
-func getPages(sum int) int {
-	var pn = sum / 20
-	var y = sum % 20
-	if y == 0 {
-		return pn
-	}
-	return pn + 1
-}
+
 func wsUpload(ws *websocket.Conn) {
 	defer ws.Close()
 	b := make([]byte, 2048)
@@ -247,6 +244,7 @@ func wsUpload(ws *websocket.Conn) {
 	v.Vid = NewToken()
 	v.Owner = u.Email
 	v.UploadTime = time.Now()
+	v.Tags = splitHan(v.Title + v.Introduction)
 	e = insertVideo(v)
 	if testErr(e) {
 		returnInfo(ws, "ERR", "上传失败:"+e.Error())
@@ -283,12 +281,64 @@ func wsEditVideo(ws *websocket.Conn) {
 	s, e := mgo.Dial("127.0.0.1")
 	checkErr(e)
 	defer s.Close()
-	e = s.DB("theytube").C("videos").Update(bson.M{"vid": v.Vid}, bson.M{"$set": bson.M{"title": v.Title, "cover": v.Cover, "introduction": v.Introduction, "clips": v.Clips}})
+	e = s.DB("theytube").C("videos").Update(bson.M{"vid": v.Vid}, bson.M{"$set": bson.M{"title": v.Title, "tags": splitHan(v.Title + v.Introduction), "cover": v.Cover, "introduction": v.Introduction, "clips": v.Clips}})
 	if e != nil {
 		returnInfo(ws, "ERR", "修改失败:"+e.Error())
 		return
 	}
 	returnInfo(ws, "OK", "")
+}
+func wsSearch(ws *websocket.Conn) {
+	defer ws.Close()
+	b := make([]byte, 2048)
+	l, e := ws.Read(b)
+	if testErr(e) {
+		return
+	}
+	bi := BaseInfo{}
+	e = json.Unmarshal(b[:l], &bi)
+	if testErr(e) {
+		return
+	}
+	pageNum64, e := strconv.ParseInt(bi.State, 10, 64)
+	if testErr(e) {
+		returnInfo(ws, "ERR", "String err")
+		return
+	}
+	pageNum := int(pageNum64)
+	s, e := mgo.Dial("127.0.0.1")
+	checkErr(e)
+	defer s.Close()
+	cv := s.DB("theytube").C("videos")
+	counter, e := cv.Find(bson.M{"$text": bson.M{"$search": splitHan(bi.Info)}}).Count()
+	if e != nil {
+		fmt.Println("counter err")
+	}
+	if counter == 0 {
+		returnInfo(ws, "OK", "0个搜索结果")
+		return
+	}
+	var maxPage = getPages(counter)
+	if pageNum < 1 || pageNum > maxPage {
+		returnInfo(ws, "ERR", "不存在的页面")
+		return
+	}
+	vs := []Video{}
+	e = cv.Find(bson.M{"$text": bson.M{"$search": splitHan(bi.Info)}}).Limit(20).Skip((pageNum - 1) * 20).All(&vs)
+	if e != nil {
+		returnInfo(ws, "ERR", e.Error())
+		return
+	}
+	rdata := struct {
+		BaseInfo
+		Data []Video
+	}{
+		BaseInfo{"OK", strconv.FormatInt(int64(maxPage), 10)},
+		vs,
+	}
+	data, e := json.Marshal(rdata)
+	checkErr(e)
+	ws.Write(data)
 }
 func wsDeleteVideo(ws *websocket.Conn) {
 	defer ws.Close()
@@ -422,4 +472,26 @@ func insertVideo(v Video) error {
 	uv := s.DB("theytube").C("videos")
 	e = uv.Insert(&v)
 	return e
+}
+func splitHan(han string) string {
+	bf := bytes.Buffer{}
+	hz := regexp.MustCompile("[\\p{Han}]")
+	for _, r := range han {
+		str := string(r)
+		if hz.MatchString(str) {
+			bf.WriteString(str)
+			bf.WriteString(" ")
+			continue
+		}
+		bf.WriteString(str)
+	}
+	return bf.String()
+}
+func getPages(sum int) int {
+	var pn = sum / 20
+	var y = sum % 20
+	if y == 0 {
+		return pn
+	}
+	return pn + 1
 }

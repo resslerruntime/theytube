@@ -136,7 +136,7 @@
           if (gobj.State=="OK") {
             info.innerHTML='修改成功'
             info.style.display = 'block'
-            setTimeout("document.getElementById('modal-edit').className='modal'", 500)
+            setTimeout("document.getElementById('modal-edit').className='modal';document.getElementById('edit-info').style.display = 'none';document.getElementById('edit-submit').style.display = 'block'", 500)
           }else if (gobj.Info=="ERR") {
             info.innerHTML=gobj.Info
             info.style.display = 'block'
@@ -317,7 +317,16 @@
           console.log('my on err : '+evt.data)
         }
       }
+      function mSearch() {
+        var q=document.getElementById('search-input').value;
+        if(q!=''){
+          window.open('/search.html?q='+encodeURIComponent(q))
+        }
+      }
   		function doOnLoad() {
+        document.getElementById("search-input").onkeyup=function(e) {
+          if (e.keyCode==13) {mSearch()}
+        }
   			var sid=getCookie('TheyTubeSessionID')
         if (sid==''||sid==null) {return;}
         var obj=new Object()
@@ -373,7 +382,7 @@
 <div style="display: flex;flex-direction: column;align-items: center;box-shadow: 2px 2px 2px #ddd;">
   <div style="display: flex;width: 100%; justify-content: space-between;align-items: center;">
     <span style="padding: 5px;color: #000;"><b>TheyTube</b></span>
-    <i class="icon icon-search" style="margin-right: 10px;color: #000;"></i>
+    <i class="icon icon-search" onclick="document.getElementById('modal-search').className='modal active'" style="padding: 10px;color: #000;"></i>
   </div>
   <div style="max-width: 700px;width: 100%;">
     <ul class="tab tab-block" style="margin: 0px;">
@@ -618,7 +627,22 @@
           <img id="edit-img-test" style="width: 100%" class="img-responsive"><br>
           <div class="loading" id="edit-progress" style="display: none;"></div>
           <div align="center" style="color: #000;" id="edit-info"></div>
-          <button style="display: block;width: 100%;" class="btn" onclick="edit(this)">修改</button>
+          <button style="display: block;width: 100%;" id="edit-submit" class="btn" onclick="edit(this)">修改</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal" id="modal-search">
+  <div class="modal-overlay"></div>
+  <div class="modal-container">
+    <div class="modal-header">
+      <button class="btn btn-clear float-right" onclick="document.getElementById('modal-search').className='modal'"></button>
+      <div class="modal-title"><b>搜索</b></div>
+    </div>
+    <div class="modal-body">
+      <div class="content">
+         <input type="text" class="form-input" id="search-input">
+         <button style="float: right;" onclick="mSearch()" class="btn btn-primary">搜索</button>
       </div>
     </div>
   </div>
