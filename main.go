@@ -51,7 +51,7 @@ func main() {
 	http.Handle("/wsDeleteVideo", websocket.Handler(wsDeleteVideo))
 	http.Handle("/wsGetMyVideos", websocket.Handler(wsGetMyVideos))
 	http.Handle("/wsSearch", websocket.Handler(wsSearch))
-	http.ListenAndServe(":8090", nil)
+	http.ListenAndServe(":9999", nil)
 }
 func wshome(ws *websocket.Conn) {
 	defer ws.Close()
